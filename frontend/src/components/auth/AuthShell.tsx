@@ -36,7 +36,7 @@ export function AuthShell({
       </div>
 
       <aside className="hidden bg-canvas lg:flex lg:w-[46%] lg:flex-col lg:justify-center lg:border-l lg:border-line lg:px-14">
-        <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-600">PrepArena</p>
+        <img src="/logo.png" alt="Chandrabhaga Academy" className="h-12 w-auto max-w-[250px] object-contain object-left" />
         <h2 className="mt-3 max-w-sm text-3xl font-bold leading-tight tracking-tight text-ink">
           Everything your exam needs, in one calm workspace.
         </h2>

@@ -1,169 +1,28 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronDownIcon, PlusIcon } from 'lucide-react';
+import { BookOpenCheckIcon, ChevronDownIcon, Clock3Icon, ListChecksIcon, PlusIcon, Trash2Icon, UsersIcon } from 'lucide-react';
 import { testSeriesList } from '../../data/testSeries';
-import { PageShell, Panel } from '../../components/ui/PageShell';
-import { Badge, Button, Field, Input, Select, StatusBadge, Textarea, btn } from '../../components/ui/Primitives';
-import { RowActions, Table, TableWrap, Td, Th } from '../../components/admin/DataTable';
 import { exams } from '../../data/content';
+import { PageShell, Panel, StatCard } from '../../components/ui/PageShell';
+import { Badge, Button, Field, Input, Select, StatusBadge, Textarea, btn } from '../../components/ui/Primitives';
+
+type Draft = { title: string; description: string; exam: string; kind: string; access: string; price: string; difficulty: string; language: string; tests: string; questions: string; duration: string; status: string };
+const blank: Draft = { title: '', description: '', exam: 'SSC', kind: 'Full Mock', access: 'paid', price: '499', difficulty: 'Moderate', language: 'English', tests: '10', questions: '1000', duration: '60', status: 'draft' };
 
 export function AdminTestSeries() {
-  const [formOpen, setFormOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [paid, setPaid] = useState(true);
-
-  return (
-    <PageShell
-      title="Test Series"
-      subtitle="Create series, then add individual tests inside each one."
-      width="max-w-[1400px]"
-      actions={
-      <Button onClick={() => setFormOpen((o) => !o)}>
-          <PlusIcon className="h-4 w-4" /> Create Test Series
-        </Button>
-      }>
-      
-      {formOpen &&
-      <Panel className="mb-5">
-          <h2 className="text-base font-semibold text-ink">New test series</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <Field label="Series name" className="sm:col-span-2">
-              <Input placeholder="SSC CGL Mock Test Series" />
-            </Field>
-            <Field label="Description" className="sm:col-span-2">
-              <Textarea rows={2} placeholder="What this series covers..." />
-            </Field>
-            <Field label="Exam">
-              <Select>
-                {exams.map((e) =>
-              <option key={e}>{e}</option>
-              )}
-              </Select>
-            </Field>
-            <Field label="Thumbnail" hint="Stored on Cloudinary">
-              <Input type="file" />
-            </Field>
-            <Field label="Pricing">
-              <Select value={paid ? 'Paid' : 'Free'} onChange={(e) => setPaid(e.target.value === 'Paid')}>
-                <option>Paid</option>
-                <option>Free</option>
-              </Select>
-            </Field>
-            {paid &&
-          <Field label="Price (₹)">
-                <Input type="number" placeholder="499" />
-              </Field>
-          }
-            <Field label="Number of tests">
-              <Input type="number" placeholder="20" />
-            </Field>
-            <Field label="Status">
-              <Select>
-                <option>Draft</option>
-                <option>Published</option>
-              </Select>
-            </Field>
-          </div>
-          <div className="mt-5 flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setFormOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={() => setFormOpen(false)}>Create series</Button>
-          </div>
-        </Panel>
-      }
-
-      <TableWrap footer={`${testSeriesList.length} test series`}>
-        <Table>
-          <thead>
-            <tr>
-              <Th>Series</Th>
-              <Th>Exam</Th>
-              <Th>Type</Th>
-              <Th>Tests</Th>
-              <Th>Status</Th>
-              <Th>Created</Th>
-              <Th className="text-right">Actions</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {testSeriesList.map((series) =>
-            <React.Fragment key={series.id}>
-                <tr className="transition-colors duration-150 ease-smooth hover:bg-canvas/60">
-                  <Td>
-                    <button
-                    type="button"
-                    onClick={() => setExpanded(expanded === series.id ? null : series.id)}
-                    className="flex items-center gap-2 text-left">
-                    
-                      <ChevronDownIcon
-                      className={`h-4 w-4 shrink-0 text-ink-muted transition-transform duration-200 ease-smooth ${
-                      expanded === series.id ? 'rotate-180' : ''}`
-                      } />
-                    
-                      <span>
-                        <span className="block font-medium text-ink">{series.title}</span>
-                        <span className="block text-xs text-ink-muted">
-                          {series.totalQuestions.toLocaleString('en-IN')} questions
-                        </span>
-                      </span>
-                    </button>
-                  </Td>
-                  <Td>{series.exam}</Td>
-                  <Td>
-                    <Badge tone={series.type === 'free' ? 'green' : 'violet'}>
-                      {series.type === 'free' ? 'Free' : `₹${series.price}`}
-                    </Badge>
-                  </Td>
-                  <Td className="tabular-nums">{series.tests.length}</Td>
-                  <Td>
-                    <StatusBadge status={series.status} />
-                  </Td>
-                  <Td className="whitespace-nowrap text-ink-muted">{series.created}</Td>
-                  <Td>
-                    <RowActions
-                    extra={
-                    <Link to="/admin/test-series/new-test" className={btn('secondary', 'sm', 'mr-1')}>
-                          <PlusIcon className="h-3.5 w-3.5" /> Create Test
-                        </Link>
-                    } />
-                  
-                  </Td>
-                </tr>
-                {expanded === series.id &&
-              <tr>
-                    <td colSpan={7} className="border-b border-line bg-canvas/60 px-5 py-4">
-                      <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                        {series.tests.slice(0, 6).map((test) =>
-                    <li
-                      key={test.id}
-                      className="flex items-center justify-between gap-3 rounded-xl border border-line bg-white px-3.5 py-2.5">
-                      
-                            <span className="min-w-0">
-                              <span className="block truncate text-[13px] font-medium text-ink">{test.title}</span>
-                              <span className="block text-xs text-ink-muted">
-                                {test.questions} questions · {test.duration} min
-                              </span>
-                            </span>
-                            <Link to="/admin/test-series/new-test" className="text-[13px] font-medium text-brand-700 hover:underline">
-                              Edit
-                            </Link>
-                          </li>
-                    )}
-                      </ul>
-                      {series.tests.length > 6 &&
-                  <p className="mt-3 text-[13px] text-ink-muted">
-                          + {series.tests.length - 6} more tests in this series
-                        </p>
-                  }
-                    </td>
-                  </tr>
-              }
-              </React.Fragment>
-            )}
-          </tbody>
-        </Table>
-      </TableWrap>
-    </PageShell>);
-
+  const [draft, setDraft] = useState(blank);
+  const [saved, setSaved] = useState<typeof testSeriesList>(testSeriesList);
+  const set = (key: keyof Draft, value: string) => setDraft((current) => ({ ...current, [key]: value }));
+  const published = useMemo(() => saved.filter((item) => item.status === 'published').length, [saved]);
+  const submit = (event: React.FormEvent) => { event.preventDefault(); setSaved((items) => [{ ...items[0], id: 'new-' + Date.now(), title: draft.title || 'Untitled test series', description: draft.description, exam: draft.exam, type: draft.access as 'free' | 'paid', price: draft.access === 'paid' ? Number(draft.price) : undefined, difficulty: draft.difficulty as 'Easy' | 'Moderate' | 'Hard', languages: draft.language, tests: [], totalQuestions: Number(draft.questions), status: draft.status as 'draft' | 'published' | 'unpublished', created: 'Today' }, ...items]); setDraft(blank); setOpen(false); };
+  return <PageShell title="Test Series" subtitle="Create and organise mock tests for your students." width="max-w-[1400px]" actions={<Button onClick={() => setOpen((value) => !value)}><PlusIcon className="h-4 w-4" /> Create test series</Button>}>
+    <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><StatCard label="Total series" value={String(saved.length)} icon={<BookOpenCheckIcon className="h-4 w-4" />} /><StatCard label="Published" value={String(published)} icon={<UsersIcon className="h-4 w-4" />} /><StatCard label="Total tests" value={String(saved.reduce((sum, item) => sum + item.tests.length, 0))} icon={<ListChecksIcon className="h-4 w-4" />} /><StatCard label="Questions" value={String(saved.reduce((sum, item) => sum + item.totalQuestions, 0))} icon={<Clock3Icon className="h-4 w-4" />} /></div>
+    {open && <Panel className="mb-6"><div className="flex items-start justify-between"><div><h2 className="text-lg font-semibold text-ink">Create test series</h2><p className="mt-1 text-sm text-ink-muted">Set the series details first, then add individual tests.</p></div><Badge tone="brand">Step 1 · Series details</Badge></div><form onSubmit={submit} className="mt-5 space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2"><Field label="Series name" className="sm:col-span-2"><Input required value={draft.title} onChange={(e) => set('title', e.target.value)} placeholder="SSC CGL Full Mock Test Series" /></Field><Field label="Description" className="sm:col-span-2"><Textarea required rows={3} value={draft.description} onChange={(e) => set('description', e.target.value)} placeholder="Explain what students get in this series." /></Field><Field label="Exam"><Select value={draft.exam} onChange={(e) => set('exam', e.target.value)}>{exams.map((exam) => <option key={exam}>{exam}</option>)}</Select></Field><Field label="Test type"><Select value={draft.kind} onChange={(e) => set('kind', e.target.value)}><option>Full Mock</option><option>Sectional</option><option>Current Affairs</option><option>Previous Year</option></Select></Field><Field label="Difficulty"><Select value={draft.difficulty} onChange={(e) => set('difficulty', e.target.value)}><option>Easy</option><option>Moderate</option><option>Hard</option></Select></Field><Field label="Language"><Select value={draft.language} onChange={(e) => set('language', e.target.value)}><option>English</option><option>Hindi</option><option>English + Hindi</option></Select></Field><Field label="Access"><Select value={draft.access} onChange={(e) => set('access', e.target.value)}><option value="paid">Paid</option><option value="free">Free</option></Select></Field>{draft.access === 'paid' && <Field label="Price (₹)"><Input type="number" min="1" required value={draft.price} onChange={(e) => set('price', e.target.value)} /></Field>}<Field label="Number of tests"><Input type="number" min="1" required value={draft.tests} onChange={(e) => set('tests', e.target.value)} /></Field><Field label="Questions per series"><Input type="number" min="1" required value={draft.questions} onChange={(e) => set('questions', e.target.value)} /></Field><Field label="Default timing per test (minutes)"><Input type="number" min="1" required value={draft.duration} onChange={(e) => set('duration', e.target.value)} /></Field><Field label="Status"><Select value={draft.status} onChange={(e) => set('status', e.target.value)}><option value="draft">Draft</option><option value="published">Published</option></Select></Field></div>
+      <div className="flex justify-end gap-2 border-t border-line pt-4"><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit">Save series and add tests</Button></div>
+    </form></Panel>}
+    <div className="space-y-3">{saved.map((series) => <div key={series.id} className="overflow-hidden rounded-2xl border border-line bg-white shadow-soft"><div className="flex flex-wrap items-center gap-4 p-5"><button type="button" onClick={() => setExpanded(expanded === series.id ? null : series.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left"><ChevronDownIcon className={'h-4 w-4 shrink-0 text-ink-muted transition ' + (expanded === series.id ? 'rotate-180' : '')} /><span className="min-w-0"><span className="block truncate text-sm font-semibold text-ink">{series.title}</span><span className="mt-1 block text-xs text-ink-muted">{series.exam} · {series.tests.length} tests · {series.totalQuestions.toLocaleString('en-IN')} questions</span></span></button><Badge tone={series.type === 'free' ? 'green' : 'violet'}>{series.type === 'free' ? 'Free' : '₹' + series.price}</Badge><StatusBadge status={series.status} /><Link to="/admin/test-series/new-test" className={btn('secondary', 'sm')}><PlusIcon className="h-3.5 w-3.5" /> Add test</Link><button type="button" aria-label="Delete series" className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-muted hover:bg-red-50 hover:text-red-600"><Trash2Icon className="h-4 w-4" /></button></div>{expanded === series.id && <div className="border-t border-line bg-canvas/60 p-5"><div className="grid gap-3 sm:grid-cols-3"><div><p className="text-xs text-ink-muted">Difficulty</p><p className="mt-1 text-sm font-medium text-ink">{series.difficulty}</p></div><div><p className="text-xs text-ink-muted">Languages</p><p className="mt-1 text-sm font-medium text-ink">{series.languages}</p></div><div><p className="text-xs text-ink-muted">Created</p><p className="mt-1 text-sm font-medium text-ink">{series.created}</p></div></div><div className="mt-5 flex justify-end"><Link to="/admin/test-series/new-test" className="text-sm font-semibold text-brand-700 hover:underline">Open test builder →</Link></div></div>}</div>)}</div>
+  </PageShell>;
 }

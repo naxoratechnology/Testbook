@@ -130,7 +130,7 @@ export function SearchDialog() {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Search PrepArena"
+        aria-label="Search Chandrabhaga Academy"
         className="mx-auto w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-lift">
         
         <div className="flex items-center gap-3 border-b border-line px-4">

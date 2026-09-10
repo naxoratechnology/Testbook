@@ -1,0 +1,9 @@
+const service = require('./notes.service');
+const validation = require('./notes.validation');
+const run = (handler) => (req, res, next) => Promise.resolve(handler(req, res)).catch(next);
+const create = run(async (req, res) => { const { value, errors } = validation.validate(req.body); if (Object.keys(errors).length || !req.file) return res.status(400).json({ success: false, message: 'Validation failed.', errors: { ...errors, ...(req.file ? {} : { file: 'A PDF file is required.' }) } }); return res.status(201).json({ success: true, data: { notes: await service.create(value, req.file, req.auth.sub) } }); });
+const list = run(async (req, res) => res.json({ success: true, data: { notes: await service.list(req.query, req.auth?.role === 'admin') } }));
+const detail = run(async (req, res) => res.json({ success: true, data: { notes: await service.find(req.params.id, req.auth?.role === 'admin') } }));
+const update = run(async (req, res) => { const { value, errors } = validation.validate(req.body); if (Object.keys(errors).length) return res.status(400).json({ success: false, message: 'Validation failed.', errors }); return res.json({ success: true, data: { notes: await service.update(req.params.id, value) } }); });
+const remove = run(async (req, res) => { await service.remove(req.params.id); return res.json({ success: true, message: 'Notes deleted successfully.' }); });
+module.exports = { create, list, detail, update, remove };

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+let listenersAttached = false;
 
 async function connectDatabase() {
   try {
@@ -22,24 +23,13 @@ async function connectDatabase() {
       );
     }
 
-    mongoose.connection.on('connected', () => {
-      console.log('✅ MongoDB connection established');
-    });
-
-    mongoose.connection.on('reconnected', () => {
-      console.log('🔄 MongoDB reconnected');
-    });
-
-    mongoose.connection.on('disconnected', () => {
-      console.warn('⚠️ MongoDB disconnected');
-    });
-
-    mongoose.connection.on('error', (error) => {
-      console.error(
-        '❌ MongoDB connection error:',
-        error.message
-      );
-    });
+    if (!listenersAttached) {
+      mongoose.connection.on('connected', () => console.log('MongoDB connection established'));
+      mongoose.connection.on('reconnected', () => console.log('MongoDB reconnected'));
+      mongoose.connection.on('disconnected', () => console.warn('MongoDB disconnected'));
+      mongoose.connection.on('error', (error) => console.error('MongoDB connection error:', error.message));
+      listenersAttached = true;
+    }
 
     await mongoose.connect(uri, {
       dbName: databaseName,

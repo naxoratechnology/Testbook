@@ -1,0 +1,10 @@
+const router = require('express').Router();
+const controller = require('./syllabus.controller');
+const { requireAuth, requireRole } = require('../auth/auth.middleware');
+const { upload } = require('./syllabus.upload');
+router.get('/', controller.list);
+router.get('/:id', controller.detail);
+router.post('/', requireAuth, requireRole('admin'), upload.single('file'), controller.create);
+router.patch('/:id', requireAuth, requireRole('admin'), controller.update);
+router.delete('/:id', requireAuth, requireRole('admin'), controller.remove);
+module.exports = router;

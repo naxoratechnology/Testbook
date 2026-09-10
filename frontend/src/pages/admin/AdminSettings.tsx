@@ -36,10 +36,10 @@ export function AdminSettings() {
           <h2 className="text-base font-semibold text-ink">Platform</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <Field label="Platform name">
-              <Input defaultValue="PrepArena" />
+              <Input defaultValue="Chandrabhaga Academy" />
             </Field>
             <Field label="Support email">
-              <Input defaultValue="support@preparena.com" />
+              <Input defaultValue="support@chandrabhagaacademy.com" />
             </Field>
             <Field label="Default exam">
               <Select defaultValue="SSC">

@@ -1,0 +1,4 @@
+const mongoose = require('mongoose');
+const schema = new mongoose.Schema({ name: { type: String, required: true, trim: true, maxlength: 180, index: true }, description: { type: String, default: '' }, exam: { type: String, required: true, index: true }, subject: { type: String, required: true, index: true }, pdfUrl: { type: String, required: true }, pdfPublicId: { type: String, required: true }, resourceType: { type: String, default: 'raw' }, pages: { type: Number, default: 0 }, status: { type: String, enum: ['draft', 'published', 'unpublished'], default: 'draft', index: true }, createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true } }, { timestamps: true, versionKey: false });
+schema.index({ name: 'text', description: 'text', exam: 'text', subject: 'text' });
+module.exports = mongoose.model('Notes', schema);

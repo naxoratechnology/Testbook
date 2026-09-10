@@ -84,7 +84,7 @@ function Footer() {
         )}
       </div>
       <div className="border-t border-line px-4 py-5 text-center text-xs text-ink-muted sm:px-6 lg:px-8">
-        © 2026 PrepArena. Built for serious exam preparation.
+            © 2026 Chandrabhaga Academy. Built for serious exam preparation.
       </div>
     </footer>);
 

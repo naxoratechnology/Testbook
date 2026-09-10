@@ -28,7 +28,7 @@ export function AdminDashboard() {
   return (
     <PageShell
       title="Dashboard"
-      subtitle="Content, students and activity across PrepArena."
+      subtitle="Content, students and activity across Chandrabhaga Academy."
       width="max-w-[1400px]"
       actions={
       <Link to="/admin/courses/new" className={btn('primary', 'md')}>

@@ -3,7 +3,16 @@ const cors = require('cors');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
-const mongoose = require('mongoose');
+const rateLimit = require('express-rate-limit');
+const authRoutes = require('./modules/auth/auth.routes');
+const courseRoutes = require('./modules/course/course.routes');
+const testSeriesRoutes = require('./modules/testSeries/testSeries.routes');
+const notesRoutes = require('./modules/notes/notes.routes');
+const currentAffairsRoutes = require('./modules/currentAffairs/currentAffairs.routes');
+const syllabusRoutes = require('./modules/syllabus/syllabus.routes');
+const previousPaperRoutes = require('./modules/previousPaper/previousPaper.routes');
+const notificationRoutes = require('./modules/notification/notification.routes');
+const studentRoutes = require('./modules/student/student.routes');
 const env = require('./config/env');
 const app = express();
 
@@ -69,26 +78,48 @@ app.use(
   )
 );
 
+app.use('/api/v1/auth', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+}));
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/courses', courseRoutes);
+app.use('/api/v1/test-series', testSeriesRoutes);
+app.use('/api/v1/notes', notesRoutes);
+app.use('/api/v1/current-affairs', currentAffairsRoutes);
+app.use('/api/v1/syllabus', syllabusRoutes);
+app.use('/api/v1/previous-papers', previousPaperRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/students', studentRoutes);
+
 /*
 |--------------------------------------------------------------------------
 | Health Check
 |--------------------------------------------------------------------------
 */
 
-app.get('/api/health', (_request, response) => {
-  const database =
-    mongoose.connection.readyState === 1
-      ? 'connected'
-      : 'disconnected';
-
-  response.status(
-    database === 'connected' ? 200 : 503
-  ).json({
-    success: database === 'connected',
-    service: 'Testbook API',
-    database,
-    timestamp: new Date().toISOString(),
-  });
+app.get('/', (_request, response) => {
+  response
+    .status(200)
+    .type('html')
+    .send(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Testbook API</title>
+    <style>
+      body { margin: 0; background: #fff; color: #0f172a; font: 16px Georgia, serif; }
+      main { display: flex; align-items: center; gap: 6px; padding: 10px 12px; }
+      span { font-size: 18px; }
+    </style>
+  </head>
+  <body>
+    <main><span aria-hidden="true"></span><span>Testbook API Running...</span></main>
+  </body>
+</html>`);
 });
 
 /*

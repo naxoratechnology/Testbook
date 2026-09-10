@@ -1,0 +1,13 @@
+const router = require('express').Router();
+const controller = require('./testSeries.controller');
+const { requireAuth, requireRole } = require('../auth/auth.middleware');
+router.get('/', controller.list);
+router.get('/:id', controller.detail);
+router.post('/', requireAuth, requireRole('admin'), controller.create);
+router.patch('/:id', requireAuth, requireRole('admin'), controller.update);
+router.delete('/:id', requireAuth, requireRole('admin'), controller.remove);
+router.post('/:id/tests', requireAuth, requireRole('admin'), controller.addTest);
+router.post('/:id/purchase', requireAuth, requireRole('student'), controller.purchase);
+router.post('/:seriesId/tests/:testId/attempts', requireAuth, requireRole('student'), controller.attempt);
+router.get('/:id/results', requireAuth, requireRole('student'), controller.results);
+module.exports = router;

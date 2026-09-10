@@ -1,0 +1,3 @@
+const mongoose = require('mongoose');
+const schema = new mongoose.Schema({ title: { type: String, required: true, trim: true, maxlength: 180 }, message: { type: String, required: true, trim: true, maxlength: 1000 }, type: { type: String, enum: ['course', 'test-series', 'test', 'notes', 'current-affairs', 'announcement'], default: 'announcement' }, href: { type: String, default: '' }, audience: { type: String, enum: ['all', 'selected'], default: 'all' }, recipients: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true } }, { timestamps: true, versionKey: false });
+module.exports = mongoose.model('Notification', schema);

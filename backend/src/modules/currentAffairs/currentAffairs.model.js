@@ -1,0 +1,4 @@
+const mongoose = require('mongoose');
+const question = new mongoose.Schema({ text: { type: String, required: true }, options: { type: [String], validate: (v) => v.length >= 2 }, correctAnswer: { type: Number, required: true }, explanation: { type: String, default: '' } }, { _id: true });
+const schema = new mongoose.Schema({ date: { type: Date, required: true, unique: true, index: true }, title: { type: String, required: true, trim: true }, exam: { type: String, default: 'All Exams' }, highlights: { type: [String], default: [] }, pdfUrl: { type: String, required: true }, pdfPublicId: { type: String, required: true }, questions: { type: [question], default: [] }, status: { type: String, enum: ['draft', 'published', 'unpublished'], default: 'draft', index: true }, createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true } }, { timestamps: true, versionKey: false });
+module.exports = mongoose.model('CurrentAffairs', schema);

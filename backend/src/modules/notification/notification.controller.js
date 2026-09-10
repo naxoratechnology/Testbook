@@ -1,0 +1,10 @@
+const service = require('./notification.service');
+const validation = require('./notification.validation');
+const run = (fn) => (req, res, next) => Promise.resolve(fn(req, res)).catch(next);
+const create = run(async (req, res) => { const { value, errors } = validation.validate(req.body); if (Object.keys(errors).length) return res.status(400).json({ success: false, message: 'Validation failed.', errors }); return res.status(201).json({ success: true, data: { notification: await service.create(value, req.auth.sub) } }); });
+const adminList = run(async (_req, res) => res.json({ success: true, data: { notifications: await service.adminList() } }));
+const userList = run(async (req, res) => res.json({ success: true, data: { notifications: await service.userList(req.auth.sub) } }));
+const update = run(async (req, res) => { const { value, errors } = validation.validate(req.body); if (Object.keys(errors).length) return res.status(400).json({ success: false, message: 'Validation failed.', errors }); return res.json({ success: true, data: { notification: await service.update(req.params.id, value) } }); });
+const remove = run(async (req, res) => { await service.remove(req.params.id); return res.json({ success: true, message: 'Notification deleted successfully.' }); });
+const markRead = run(async (req, res) => res.json({ success: true, data: { notification: await service.markRead(req.params.id, req.auth.sub) } }));
+module.exports = { create, adminList, userList, update, remove, markRead };

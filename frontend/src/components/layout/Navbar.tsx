@@ -34,10 +34,10 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-3 lg:px-8">
         <Logo />
 
-        <nav aria-label="Main" className="ml-4 hidden items-center gap-0.5 lg:flex">
+        <nav aria-label="Main" className="hidden items-center justify-center gap-0.5 lg:flex">
           {links.map((link) =>
           <NavLink key={link.to} to={link.to} className={linkClass} end={link.to === '/'}>
               {link.label}
@@ -45,7 +45,7 @@ export function Navbar() {
           )}
         </nav>
 
-        <div className="ml-auto flex items-center gap-1.5">
+        <div className="ml-auto flex shrink-0 items-center justify-end gap-0.5 sm:gap-1.5">
           <button
             type="button"
             onClick={() => setSearchOpen(true)}
@@ -114,9 +114,6 @@ export function Navbar() {
           <>
               <Link to="/login" className={btn('secondary', 'md', 'hidden sm:inline-flex')}>
                 Login
-              </Link>
-              <Link to="/register" className={btn('primary', 'md', 'hidden sm:inline-flex')}>
-                Start Learning
               </Link>
             </>
           }
