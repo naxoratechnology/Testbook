@@ -7,7 +7,7 @@ export interface NotePayload { name: string; description: string; exam: string; 
 export interface CreateNotePayload extends NotePayload { file: File }
 
 export const noteSchema = yup.object({ name: yup.string().trim().required('Notes name is required.'), description: yup.string().trim().default(''), exam: yup.string().trim().required('Exam is required.'), subject: yup.string().trim().required('Subject is required.'), status: yup.mixed<NotesStatus>().oneOf(['draft', 'published', 'unpublished']).required() });
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1', withCredentials: true });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL, withCredentials: true });
 export const notesApiService = {
   listPublic: (params?: { exam?: string; subject?: string; search?: string }) => api.get('/notes', { params }),
   getPublic: (id: string) => api.get(`/notes/${id}`),

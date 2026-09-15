@@ -26,10 +26,12 @@ const env = {
   },
 
   cors: {
-    origins: (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
-      .split(',')
-      .map((origin) => origin.trim())
-      .filter(Boolean),
+    origins: [...new Set([
+      ...(process.env.CLIENT_ORIGIN || '').split(','),
+      'https://chandrabhagaacademy.com',
+      'https://www.chandrabhagaacademy.com',
+      ...(process.env.NODE_ENV === 'production' ? [] : ['http://localhost:5173']),
+    ].map((origin) => origin.trim().replace(/\/$/, '')).filter(Boolean))],
   },
 
   jwt: {

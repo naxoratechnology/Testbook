@@ -18,6 +18,7 @@ const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
 const notificationRoutes = require('./modules/notification/notification.routes');
 const env = require('./config/env');
 const app = express();
+app.set('trust proxy', 1);
 
 /*
 |--------------------------------------------------------------------------
@@ -33,12 +34,17 @@ app.use(helmet());
 |--------------------------------------------------------------------------
 */
 
-app.use(
-  cors({
-    origin: env.cors.origins,
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin || env.cors.origins.includes(origin.replace(/\/$/, ''))) return callback(null, true);
+    return callback(Object.assign(new Error(`Origin ${origin} is not allowed by CORS.`), { statusCode: 403 }));
+  },
+  credentials: true,
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204,
+};
+app.use(cors(corsOptions));
 
 /*
 |--------------------------------------------------------------------------

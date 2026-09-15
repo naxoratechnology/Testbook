@@ -11,7 +11,7 @@ export interface CurrentAffairsPayload { date: string; title: string; exam: stri
 export interface CreateCurrentAffairsPayload extends CurrentAffairsPayload { file: File }
 
 export const currentAffairsSchema = yup.object({ date: yup.string().required('Date is required.'), title: yup.string().trim().required('Title is required.'), exam: yup.string().trim().required('Exam is required.'), highlights: yup.array().of(yup.string().trim().required()).required(), questions: yup.array().of(yup.object({ text: yup.string().trim().required('Question text is required.'), options: yup.array().of(yup.string().trim().required()).min(2).required(), correctAnswer: yup.number().integer().min(0).required(), explanation: yup.string().trim().default('') })).min(1, 'Add at least one daily question.').required(), status: yup.mixed<CurrentAffairsStatus>().oneOf(['draft', 'published', 'unpublished']).required() });
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1', withCredentials: true });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL, withCredentials: true });
 export const currentAffairsApiService = {
   listPublic: () => api.get('/current-affairs'), getPublic: (id: string) => api.get(`/current-affairs/${id}`), attempt: (id: string, answers: Record<string, number | null>) => api.post(`/current-affairs/${id}/attempts`, { answers }),
   listAdmin: () => api.get('/current-affairs/admin'), getAdmin: (id: string) => api.get(`/current-affairs/admin/${id}`),

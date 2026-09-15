@@ -1,5 +1,5 @@
 import axios from 'axios';
 export interface AdminStudent { _id: string; name: string; email: string; mobile: string; targetExam: string; isActive: boolean; createdAt: string; lastLoginAt: string | null; purchasedSeries: number; attempts: number; averageAccuracy: number }
 export interface StudentDetail extends Omit<AdminStudent, 'purchasedSeries' | 'attempts'> { purchasedSeries: { _id: string; title: string; access: 'free' | 'paid'; status: string }[]; testAttempts: { _id: string; seriesTitle: string; testTitle: string; score: number; accuracy: number; correct: number; incorrect: number; unanswered: number; submittedAt: string }[] }
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1', withCredentials: true });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL, withCredentials: true });
 export const studentsApiService = { list: (params?: { search?: string; active?: boolean }) => api.get('/students', { params }), get: (id: string) => api.get(`/students/${id}`), updateStatus: (id: string, isActive: boolean) => api.patch(`/students/${id}/status`, { isActive }), remove: (id: string) => api.delete(`/students/${id}`) };

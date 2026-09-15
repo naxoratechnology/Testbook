@@ -21,7 +21,7 @@ export const seriesSchema = yup.object({
 });
 export const testSchema = yup.object({ title: yup.string().trim().required('Test name is required.'), duration: yup.number().integer().min(1).required(), questions: yup.array().min(1, 'Add at least one question.').required(), status: yup.mixed<SeriesStatus>().oneOf(['draft', 'published', 'unpublished']).required() });
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1', withCredentials: true });
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL, withCredentials: true });
 export const testSeriesApiService = {
   listPublic: (params?: { exam?: string; access?: string }) => api.get('/test-series', { params }), getPublic: (id: string) => api.get(`/test-series/${id}`),
   checkout: (id: string) => api.post(`/test-series/${id}/checkout`),

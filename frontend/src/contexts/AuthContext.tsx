@@ -5,7 +5,7 @@ import { login as authLogin, register as authRegister, logout as authLogout, res
 import type { AppDispatch, RootState } from '../store';
 import { ApiNotification, notificationsApiService } from '../services/notifications/notifications.api';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+const API = import.meta.env.VITE_API_URL;
 type AuthData = { name: string; email: string; mobile: string; password: string; targetExam: string };
 const mapUser = (user: Omit<User, 'avatar'>): User => ({ ...user, avatar: '' });
 
