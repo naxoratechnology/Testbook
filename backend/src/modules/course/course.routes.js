@@ -1,14 +1,18 @@
 const router = require('express').Router();
 const controller = require('./course.controller');
-const { requireAuth, requireRole } = require('../auth/auth.middleware');
+const { requireAuth, requireRole, optionalAuth } = require('../auth/auth.middleware');
 const { upload } = require('./course.upload');
 
-router.get('/', controller.list);
-router.get('/:id', controller.detail);
+router.get('/', optionalAuth, controller.list);
+router.get('/admin', requireAuth, requireRole('admin'), controller.adminList);
+router.get('/admin/:id', requireAuth, requireRole('admin'), controller.adminDetail);
+router.get('/:id', optionalAuth, controller.detail);
+router.post('/:id/checkout', requireAuth, requireRole('student'), controller.checkout);
+router.post('/:id/checkout/verify', requireAuth, requireRole('student'), controller.verifyPayment);
 router.post('/', requireAuth, requireRole('admin'), controller.create);
 router.patch('/:id', requireAuth, requireRole('admin'), controller.update);
 router.delete('/:id', requireAuth, requireRole('admin'), controller.remove);
-router.post('/:courseId/lectures', requireAuth, requireRole('admin'), upload.fields([{ name: 'video', maxCount: 1 }, { name: 'pdf', maxCount: 1 }]), controller.addLecture);
+router.post('/:courseId/lectures', requireAuth, requireRole('admin'), upload.any(), controller.addLecture);
 router.delete('/:courseId/lectures/:lectureId', requireAuth, requireRole('admin'), controller.removeLesson);
 
 module.exports = router;

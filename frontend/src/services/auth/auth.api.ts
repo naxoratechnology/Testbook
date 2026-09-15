@@ -18,12 +18,16 @@ export const loginSchema = yup.object({
   identifier: yup.string().trim().required('Email or mobile is required.'),
   password: yup.string().required('Password is required.'),
 });
+export const changePasswordSchema = yup.object({ currentPassword: yup.string().required('Current password is required.'), newPassword: yup.string().min(8, 'Password must be at least 8 characters.').max(72).required('New password is required.'), confirmPassword: yup.string().oneOf([yup.ref('newPassword')], 'Passwords do not match.').required('Confirm your new password.') });
 
 export type LoginPayload = yup.InferType<typeof loginSchema>;
 export type RegisterPayload = yup.InferType<typeof registerSchema>;
+export type ChangePasswordPayload = yup.InferType<typeof changePasswordSchema>;
 
 export const authApiService = {
+  me: () => authApi.get('/auth/me'),
   login: (data: LoginPayload) => authApi.post('/auth/login', data),
   register: (data: RegisterPayload) => authApi.post('/auth/register', data),
   logout: () => authApi.post('/auth/logout'),
+  changePassword: (data: Omit<ChangePasswordPayload, 'confirmPassword'>) => authApi.patch('/auth/password', data),
 };

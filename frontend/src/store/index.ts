@@ -1,5 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
 import auth from '../services/auth/auth.slice';
-export const store = configureStore({ reducer: { auth } });
+import courses from '../services/courses/courses.slice';
+import testSeries from '../services/test-series/testSeries.slice';
+import notes from '../services/notes/notes.slice';
+import currentAffairs from '../services/current-affairs/currentAffairs.slice';
+import notices from '../services/notices/notices.slice';
+import syllabus from '../services/syllabus/syllabus.slice';
+import previousPapers from '../services/previous-papers/previousPapers.slice';
+import students from '../services/students/students.slice';
+import settings from '../services/settings/settings.slice';
+import dashboard from '../services/dashboard/dashboard.slice';
+export const store = configureStore({ reducer: { auth, courses, testSeries, notes, currentAffairs, notices, syllabus, previousPapers, students, settings, dashboard } });
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

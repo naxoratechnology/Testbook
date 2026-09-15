@@ -1,9 +1,9 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { AppNotification, Role, User } from '../types';
-import { notifications as seedNotifications } from '../data/content';
-import { useDispatch } from 'react-redux';
-import { login as authLogin, register as authRegister, logout as authLogout } from '../services/auth/auth.slice';
-import type { AppDispatch } from '../store';
+import { useDispatch, useSelector } from 'react-redux';
+import { login as authLogin, register as authRegister, logout as authLogout, restoreSession } from '../services/auth/auth.slice';
+import type { AppDispatch, RootState } from '../store';
+import { ApiNotification, notificationsApiService } from '../services/notifications/notifications.api';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
 type AuthData = { name: string; email: string; mobile: string; password: string; targetExam: string };
@@ -23,9 +23,11 @@ interface AuthValue {
 const AuthContext = createContext<AuthValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [items, setItems] = useState(seedNotifications);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const [items, setItems] = useState<AppNotification[]>([]);
   const dispatch = useDispatch<AppDispatch>();
+  useEffect(() => { dispatch(restoreSession()); }, [dispatch]);
+  useEffect(() => { if (!user) { setItems([]); return; } notificationsApiService.list().then(({ data }) => setItems(data.data.notifications.map((item: ApiNotification) => ({ id: item._id, title: item.title, message: item.message, type: item.type as AppNotification['type'], href: item.href || '/notifications', time: new Date(item.createdAt).toLocaleString('en-IN'), read: item.readBy.some((id) => id === user.id) })))).catch(() => setItems([])); }, [user]);
 
   const request = useCallback(async (path: string, body?: unknown) => {
     const response = await fetch(API + path, { method: body ? 'POST' : 'GET', headers: body ? { 'Content-Type': 'application/json' } : undefined, credentials: 'include', body: body ? JSON.stringify(body) : undefined });
@@ -43,10 +45,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [request]);
 
   const logout = useCallback(async () => {
-    try { await dispatch(authLogout()).unwrap(); } finally { setUser(null); }
+    await dispatch(authLogout()).unwrap();
   }, [request]);
-  const markRead = useCallback((id: string) => setItems((prev) => prev.map((item) => item.id === id ? { ...item, read: true } : item)), []);
-  const markAllRead = useCallback(() => setItems((prev) => prev.map((item) => ({ ...item, read: true }))), []);
+  const markRead = useCallback((id: string) => { setItems((prev) => prev.map((item) => item.id === id ? { ...item, read: true } : item)); notificationsApiService.markRead(id).catch(() => undefined); }, []);
+  const markAllRead = useCallback(() => { setItems((prev) => prev.map((item) => ({ ...item, read: true }))); notificationsApiService.markAllRead().catch(() => undefined); }, []);
   const value = useMemo(() => ({ user, login, register, logout, notifications: items, unreadCount: items.filter((item) => !item.read).length, markRead, markAllRead }), [user, login, register, logout, items, markRead, markAllRead]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

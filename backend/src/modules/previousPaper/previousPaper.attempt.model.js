@@ -1,0 +1,3 @@
+const mongoose = require('mongoose');
+const schema = new mongoose.Schema({ user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true }, paper: { type: mongoose.Schema.Types.ObjectId, ref: 'PreviousPaper', required: true, index: true }, answers: { type: Map, of: Number, default: {} }, score: { type: Number, default: 0 }, correct: { type: Number, default: 0 }, incorrect: { type: Number, default: 0 }, unanswered: { type: Number, default: 0 }, submittedAt: { type: Date, default: Date.now } }, { timestamps: true, versionKey: false });
+module.exports = mongoose.model('PreviousPaperAttempt', schema);

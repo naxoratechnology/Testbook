@@ -6,5 +6,6 @@ router.get('/admin', requireAuth, requireRole('admin'), controller.adminList);
 router.post('/', requireAuth, requireRole('admin'), controller.create);
 router.patch('/:id', requireAuth, requireRole('admin'), controller.update);
 router.delete('/:id', requireAuth, requireRole('admin'), controller.remove);
+router.patch('/read-all', requireAuth, controller.markAllRead);
 router.patch('/:id/read', requireAuth, controller.markRead);
 module.exports = router;

@@ -142,6 +142,9 @@ export type NotificationType =
 'test' |
 'notes' |
 'current-affairs' |
+'syllabus' |
+'previous-paper' |
+'notice' |
 'announcement';
 
 export interface AppNotification {

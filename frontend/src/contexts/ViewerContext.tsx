@@ -7,6 +7,7 @@ export interface PdfDoc {
   title: string;
   subtitle: string;
   module: PdfModule;
+  url?: string;
   pages: {heading: string;body: string[];}[];
 }
 

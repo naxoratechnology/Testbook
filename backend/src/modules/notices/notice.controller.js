@@ -1,0 +1,11 @@
+const service = require('./notice.service');
+const validation = require('./notice.validation');
+const run = (handler) => (req, res, next) => Promise.resolve(handler(req, res)).catch(next);
+const list = run(async (req, res) => res.json({ success: true, data: { notices: await service.list(req.query, false) } }));
+const detail = run(async (req, res) => res.json({ success: true, data: { notice: await service.find(req.params.id, false) } }));
+const adminList = run(async (req, res) => res.json({ success: true, data: { notices: await service.list(req.query, true) } }));
+const adminDetail = run(async (req, res) => res.json({ success: true, data: { notice: await service.find(req.params.id, true) } }));
+const create = run(async (req, res) => { const { value, errors } = validation.validate(req.body); if (Object.keys(errors).length) return res.status(400).json({ success: false, message: 'Validation failed.', errors }); return res.status(201).json({ success: true, data: { notice: await service.create(value, req.auth.sub) } }); });
+const update = run(async (req, res) => { const { value, errors } = validation.validate(req.body); if (Object.keys(errors).length) return res.status(400).json({ success: false, message: 'Validation failed.', errors }); return res.json({ success: true, data: { notice: await service.update(req.params.id, value) } }); });
+const remove = run(async (req, res) => { await service.remove(req.params.id); return res.json({ success: true, message: 'Notice deleted successfully.' }); });
+module.exports = { list, detail, adminList, adminDetail, create, update, remove };

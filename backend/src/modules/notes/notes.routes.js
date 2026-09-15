@@ -3,6 +3,8 @@ const controller = require('./notes.controller');
 const { requireAuth, requireRole } = require('../auth/auth.middleware');
 const { upload } = require('./notes.upload');
 router.get('/', controller.list);
+router.get('/admin', requireAuth, requireRole('admin'), controller.adminList);
+router.get('/admin/:id', requireAuth, requireRole('admin'), controller.adminDetail);
 router.get('/:id', controller.detail);
 router.post('/', requireAuth, requireRole('admin'), upload.single('file'), controller.create);
 router.patch('/:id', requireAuth, requireRole('admin'), controller.update);

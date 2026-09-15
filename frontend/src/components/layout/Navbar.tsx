@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { BellIcon, ChevronDownIcon, LogOutIcon, MenuIcon, SearchIcon, UserIcon, XIcon } from 'lucide-react';
+import { BellIcon, ChevronDownIcon, LogOutIcon, MegaphoneIcon, MenuIcon, SearchIcon, UserIcon, XIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useViewer } from '../../contexts/ViewerContext';
 import { btn } from '../ui/Primitives';
@@ -12,6 +12,7 @@ const publicLinks = [
 { to: '/test-series', label: 'Test Series' },
 { to: '/notes', label: 'Notes' },
 { to: '/current-affairs', label: 'Current Affairs' },
+{ to: '/notices', label: 'Notices' },
 { to: '/previous-papers', label: 'Previous Papers' },
 { to: '/syllabus', label: 'Syllabus' }];
 
@@ -56,16 +57,12 @@ export function Navbar() {
           </button>
 
           <Link
-            to="/notifications"
-            aria-label="Notifications"
+            to={user ? '/notifications' : '/notices'}
+            aria-label={user ? 'Notifications' : 'Notices'}
             className="relative flex h-10 w-10 items-center justify-center rounded-xl text-ink-soft transition-colors duration-150 ease-smooth hover:bg-canvas hover:text-ink">
             
-            <BellIcon className="h-[18px] w-[18px]" />
-            {unreadCount > 0 &&
-            <span className="absolute right-2 top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white">
-                {unreadCount}
-              </span>
-            }
+            {user ? <BellIcon className="h-[18px] w-[18px]" /> : <MegaphoneIcon className="h-[18px] w-[18px]" />}
+            {user && unreadCount > 0 && <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white">{unreadCount > 9 ? '9+' : unreadCount}</span>}
           </Link>
 
           {user ?

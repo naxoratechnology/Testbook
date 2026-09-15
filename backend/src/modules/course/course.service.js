@@ -1,24 +1,41 @@
 const Course = require('./course.model');
+const Enrollment = require('./course.enrollment.model');
 const { uploadLesson } = require('./course.upload');
 const { destroy } = require('../../config/cloudinary');
+const notifications = require('../notification/notification.service');
+
+function publicCourse(course, unlocked = false) {
+  return { ...course, lectures: (course.lectures || []).map((lecture) => {
+    const { publicId, pdfPublicId, pdfResourceType, resourceType, ...safe } = lecture;
+    if (course.access === 'paid' && !unlocked && !lecture.isPreview) return { ...safe, url: '', pdfUrl: '' };
+    return safe;
+  }), enrolled: unlocked };
+}
 
 async function create(data, userId) {
   const course = await Course.create({ ...data, createdBy: userId, publishedAt: data.status === 'published' ? new Date() : null });
+  if (course.status === 'published') await notifications.publish({ title: 'New course available', message: course.title, type: 'course', href: `/courses/${course._id}`, userId });
   return course;
 }
-async function list(query = {}, admin = false) {
+async function list(query = {}, admin = false, userId = null) {
   const filter = admin ? {} : { status: 'published' };
   if (query.exam) filter.exam = query.exam;
   if (query.category) filter.category = query.category;
   if (query.access) filter.access = query.access;
   if (query.search) filter.$text = { $search: query.search };
-  return Course.find(filter).sort({ createdAt: -1 }).lean();
+  const courses = await Course.find(filter).sort({ createdAt: -1 }).lean();
+  if (admin) return courses;
+  const enrolledIds = userId ? await Enrollment.find({ user: userId, status: 'active' }).distinct('course') : [];
+  const access = new Set(enrolledIds.map(String));
+  return courses.map((course) => publicCourse(course, course.access === 'free' || access.has(String(course._id))));
 }
-async function findById(id, admin = false) {
+async function findById(id, admin = false, userId = null) {
   const filter = admin ? { _id: id } : { _id: id, status: 'published' };
   const course = await Course.findOne(filter).lean();
   if (!course) throw Object.assign(new Error('Course not found.'), { statusCode: 404 });
-  return course;
+  if (admin) return course;
+  const enrolled = course.access === 'free' || Boolean(userId && await Enrollment.exists({ user: userId, course: id, status: 'active' }));
+  return publicCourse(course, enrolled);
 }
 async function update(id, data) {
   const course = await Course.findByIdAndUpdate(id, { ...data, publishedAt: data.status === 'published' ? new Date() : null }, { new: true, runValidators: true });

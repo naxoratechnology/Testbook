@@ -15,7 +15,17 @@ function ensureConfigured() {
 function uploadBuffer(buffer, options = {}) {
   ensureConfigured();
   return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream({ folder: 'testbook/courses', ...options }, (error, result) => error ? reject(error) : resolve(result));
+    const settings = { folder: 'testbook/courses', ...options };
+    const done = (error, result) => {
+      if (error) {
+        error.statusCode = error.http_code || error.statusCode || 502;
+        return reject(error);
+      }
+      return resolve(result);
+    };
+    const stream = settings.resource_type === 'video'
+      ? cloudinary.uploader.upload_chunked_stream({ chunk_size: 20 * 1024 * 1024, ...settings }, done)
+      : cloudinary.uploader.upload_stream(settings, done);
     stream.end(buffer);
   });
 }

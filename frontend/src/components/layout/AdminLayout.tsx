@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  BellIcon,
+  MegaphoneIcon,
   BookOpenIcon,
   CalendarDaysIcon,
   FileTextIcon,
@@ -26,7 +26,7 @@ const items = [
 { to: '/admin/test-series', label: 'Test Series', icon: ListChecksIcon },
 { to: '/admin/notes', label: 'Notes', icon: NotebookTextIcon },
 { to: '/admin/current-affairs', label: 'Current Affairs', icon: CalendarDaysIcon },
-{ to: '/admin/notifications', label: 'Notifications', icon: BellIcon },
+{ to: '/admin/notices', label: 'Notices', icon: MegaphoneIcon },
 { to: '/admin/syllabus', label: 'Syllabus', icon: ScrollTextIcon },
 { to: '/admin/previous-papers', label: 'Previous Papers', icon: FileTextIcon },
 { to: '/admin/students', label: 'Students', icon: UsersIcon },
@@ -34,7 +34,7 @@ const items = [
 
 
 export function AdminLayout() {
-  const { user, logout, unreadCount } = useAuth();
+  const { user, logout } = useAuth();
   const { setSearchOpen } = useViewer();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -112,14 +112,11 @@ export function AdminLayout() {
               <SearchIcon className="h-[18px] w-[18px]" />
             </button>
             <NavLink
-              to="/admin/notifications"
-              aria-label="Notifications"
+              to="/admin/notices"
+              aria-label="Notices"
               className="relative flex h-10 w-10 items-center justify-center rounded-xl text-ink-soft transition-colors duration-150 ease-smooth hover:bg-canvas hover:text-ink">
               
-              <BellIcon className="h-[18px] w-[18px]" />
-              {unreadCount > 0 &&
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand-600" />
-              }
+              <MegaphoneIcon className="h-[18px] w-[18px]" />
             </NavLink>
             <div className="ml-1 flex items-center gap-2.5 rounded-xl border border-line py-1 pl-1 pr-3">
               <Avatar name={user?.name ?? 'Admin'} />

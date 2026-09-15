@@ -18,3 +18,5 @@ function requireRole(...roles) {
 }
 
 module.exports.requireRole = requireRole;
+function optionalAuth(request, _response, next) { const token = request.cookies.accessToken; if (!token) return next(); try { request.auth = jwt.verify(token, env.jwt.accessSecret); } catch (_error) { request.auth = null; } return next(); }
+module.exports.optionalAuth = optionalAuth;

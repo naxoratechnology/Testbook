@@ -3,10 +3,11 @@ const { uploadBuffer } = require('../../config/cloudinary');
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 1024 * 1024 * 1024 },
+  limits: { fileSize: 1024 * 1024 * 1024, files: 2 },
   fileFilter: (_request, file, callback) => {
     const allowed = file.mimetype.startsWith('video/') || file.mimetype === 'application/pdf';
-    callback(allowed ? null : new Error('Only video files and PDF files are allowed.'));
+    if (!allowed) return callback(new Error('Only video files and PDF files are allowed.'));
+    return callback(null, true);
   },
 });
 

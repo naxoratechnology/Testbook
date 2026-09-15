@@ -29,10 +29,11 @@ const courseSchema = new mongoose.Schema({
   publishedAt: { type: Date, default: null },
 }, { timestamps: true, versionKey: false });
 
-courseSchema.pre('validate', function validatePrice(next) {
-  if (this.access === 'paid' && (!this.price || this.price <= 0)) return next(new Error('Paid courses must have a price greater than zero.'));
+courseSchema.pre('validate', function validatePrice() {
+  if (this.access === 'paid' && (!this.price || this.price <= 0)) {
+    throw new Error('Paid courses must have a price greater than zero.');
+  }
   if (this.access === 'free') this.price = 0;
-  return next();
 });
 
 courseSchema.index({ title: 'text', description: 'text', exam: 'text', category: 'text' });

@@ -19,4 +19,5 @@ async function login(identifier, password) {
   return { user: output(user), ...issue(user) };
 }
 async function me(id) { const user = await User.findById(id); if (!user || !user.isActive) throw Object.assign(new Error('User account not found.'), { statusCode: 404 }); return output(user); }
-module.exports = { register, login, me };
+async function changePassword(id, currentPassword, newPassword) { const user = await User.findById(id).select('+password'); if (!user || !user.isActive) throw Object.assign(new Error('User account not found.'), { statusCode: 404 }); if (!(await bcrypt.compare(currentPassword, user.password))) throw Object.assign(new Error('Current password is incorrect.'), { statusCode: 400 }); user.password = await bcrypt.hash(newPassword, 12); await user.save(); }
+module.exports = { register, login, me, changePassword };

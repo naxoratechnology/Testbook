@@ -1,69 +1,22 @@
-import React, { useMemo, useState } from 'react';
-import { ListChecksIcon } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { testSeriesList } from '../data/testSeries';
-import { TestSeriesCard } from '../components/cards/TestSeriesCard';
+import { ListChecksIcon } from 'lucide-react';
 import { PageShell } from '../components/ui/PageShell';
-import { EmptyState, FilterChips, Select, btn } from '../components/ui/Primitives';
-
-const kindFilters = [
-{ label: 'All', value: 'all' },
-{ label: 'Full Test', value: 'full' },
-{ label: 'Sectional Test', value: 'sectional' },
-{ label: 'Current Affairs', value: 'current-affairs' },
-{ label: 'Previous Year', value: 'previous-year' }];
-
+import { Badge, EmptyState, FilterChips, Select, btn } from '../components/ui/Primitives';
+import { fetchPublicTestSeries } from '../services/test-series/testSeries.slice';
+import type { AppDispatch, RootState } from '../store';
 
 export function TestSeriesPage() {
-  const [kind, setKind] = useState('All');
-  const [price, setPrice] = useState('All');
-  const [exam, setExam] = useState('All exams');
-
-  const exams = ['All exams', ...Array.from(new Set(testSeriesList.map((s) => s.exam)))];
-
-  const filtered = useMemo(() => {
-    const kindValue = kindFilters.find((k) => k.label === kind)?.value ?? 'all';
-    return testSeriesList.
-    filter((s) => kindValue === 'all' ? true : s.kind === kindValue).
-    filter((s) => price === 'All' ? true : s.type === price.toLowerCase()).
-    filter((s) => exam === 'All exams' ? true : s.exam === exam);
-  }, [kind, price, exam]);
-
-  return (
-    <PageShell title="Test Series" subtitle="Attempt real exam-pattern mocks and review every solution.">
-      <div className="mb-6 space-y-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Select value={exam} onChange={(e) => setExam(e.target.value)} className="sm:w-44" aria-label="Filter by exam">
-            {exams.map((e) =>
-            <option key={e}>{e}</option>
-            )}
-          </Select>
-          <FilterChips options={['All', 'Free', 'Paid']} value={price} onChange={setPrice} />
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <FilterChips options={kindFilters.map((k) => k.label)} value={kind} onChange={setKind} />
-          <p className="shrink-0 text-[13px] text-ink-muted">{filtered.length} series</p>
-        </div>
-      </div>
-
-      {filtered.length === 0 ?
-      <EmptyState
-        icon={<ListChecksIcon className="h-5 w-5" />}
-        title="No test series match these filters."
-        description="Reset the filters or browse free sectional tests to get started."
-        action={
-        <Link to="/courses" className={btn('primary', 'md')}>
-              Explore Courses
-            </Link>
-        } /> :
-
-
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((series) =>
-        <TestSeriesCard key={series.id} series={series} />
-        )}
-        </div>
-      }
-    </PageShell>);
-
+  const dispatch = useDispatch<AppDispatch>();
+  const { publicItems, loading, error } = useSelector((state: RootState) => state.testSeries);
+  const [access, setAccess] = useState('All'); const [exam, setExam] = useState('All exams');
+  useEffect(() => { dispatch(fetchPublicTestSeries()); }, [dispatch]);
+  const exams = ['All exams', ...new Set(publicItems.map((item) => item.exam))];
+  const items = useMemo(() => publicItems.filter((item) => (access === 'All' || item.access === access.toLowerCase()) && (exam === 'All exams' || item.exam === exam)), [publicItems, access, exam]);
+  return <PageShell title="Test Series" subtitle="Attempt exam-pattern tests and get instant results.">
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row"><Select value={exam} onChange={(event) => setExam(event.target.value)} className="sm:w-48">{exams.map((value) => <option key={value}>{value}</option>)}</Select><FilterChips options={['All', 'Free', 'Paid']} value={access} onChange={setAccess} /></div>
+    {error && <p className="mb-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
+    {loading ? <p className="py-12 text-center text-sm text-ink-muted">Loading test series...</p> : items.length === 0 ? <EmptyState icon={<ListChecksIcon className="h-5 w-5" />} title="No test series available." description="Published test series will appear here." /> : <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{items.map((series) => { const questions = series.tests.reduce((sum, test) => sum + test.questions.length, 0); return <article key={series._id} className="flex flex-col rounded-2xl border border-line bg-white p-5 hover:shadow-soft"><div className="flex justify-between gap-3"><p className="text-xs font-semibold uppercase text-brand-600">{series.exam}</p><Badge tone={series.access === 'free' ? 'green' : 'violet'}>{series.access === 'free' ? 'Free' : `₹${series.price}`}</Badge></div><h2 className="mt-3 text-base font-semibold text-ink">{series.title}</h2><p className="mt-2 line-clamp-2 text-sm text-ink-soft">{series.description}</p><p className="mt-4 text-xs text-ink-muted">{series.tests.length} tests · {questions} questions · {series.difficulty}</p><Link to={`/test-series/${series._id}`} className={btn('secondary', 'sm', 'mt-5 self-end')}>View Tests</Link></article>; })}</div>}
+  </PageShell>;
 }

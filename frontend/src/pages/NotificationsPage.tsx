@@ -8,6 +8,7 @@ import {
   MegaphoneIcon,
   NotebookTextIcon } from
 'lucide-react';
+import { FileQuestionIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { PageShell, Panel } from '../components/ui/PageShell';
 import { EmptyState, btn } from '../components/ui/Primitives';
@@ -19,7 +20,10 @@ const icons: Record<NotificationType, React.ElementType> = {
   test: ListChecksIcon,
   notes: NotebookTextIcon,
   'current-affairs': CalendarDaysIcon,
-  announcement: MegaphoneIcon
+  announcement: MegaphoneIcon,
+  syllabus: NotebookTextIcon,
+  'previous-paper': FileQuestionIcon,
+  notice: MegaphoneIcon
 };
 
 export function NotificationsPage() {

@@ -1,109 +1,19 @@
-import React from 'react';
+import { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { MailIcon, TargetIcon } from 'lucide-react';
-import { students } from '../../data/content';
-import { courses } from '../../data/courses';
-import { recentResults } from '../../data/testSeries';
+import { MailIcon, PhoneIcon, TargetIcon } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
 import { PageShell, Panel, StatCard } from '../../components/ui/PageShell';
-import { Badge, Progress, StatusBadge, btn } from '../../components/ui/Primitives';
+import { Badge, StatusBadge, btn } from '../../components/ui/Primitives';
 import { Table, TableWrap, Td, Th } from '../../components/admin/DataTable';
 import { Avatar } from '../../components/layout/Navbar';
-
+import { fetchStudent, updateStudentStatus } from '../../services/students/students.slice';
+import type { AppDispatch, RootState } from '../../store';
 export function AdminStudentDetail() {
-  const { studentId = '' } = useParams();
-  const student = students.find((s) => s.id === studentId) ?? students[0];
-
-  return (
-    <PageShell
-      title={student.name}
-      subtitle={`Registered ${student.registered} · ${student.targetExam}`}
-      width="max-w-[1200px]"
-      actions={
-      <>
-          <Link to="/admin/students" className={btn('secondary', 'md')}>
-            Back to students
-          </Link>
-          <button type="button" className={btn(student.active ? 'danger' : 'primary', 'md')}>
-            {student.active ? 'Deactivate' : 'Activate'}
-          </button>
-        </>
-      }>
-      
-      <div className="grid gap-5 lg:grid-cols-[1fr_2fr] lg:items-start">
-        <Panel>
-          <div className="flex items-center gap-4">
-            <Avatar name={student.name} size={56} />
-            <div className="min-w-0">
-              <p className="text-base font-bold text-ink">{student.name}</p>
-              <StatusBadge status={student.active ? 'active' : 'inactive'} />
-            </div>
-          </div>
-          <dl className="mt-5 space-y-3 border-t border-line pt-4 text-[13.5px]">
-            <div className="flex items-center gap-3">
-              <MailIcon className="h-4 w-4 shrink-0 text-ink-muted" />
-              <dt className="sr-only">Email</dt>
-              <dd className="min-w-0 truncate text-ink">{student.email}</dd>
-            </div>
-            <div className="flex items-center gap-3">
-              <TargetIcon className="h-4 w-4 shrink-0 text-ink-muted" />
-              <dt className="sr-only">Target exam</dt>
-              <dd className="text-ink">{student.targetExam}</dd>
-            </div>
-          </dl>
-        </Panel>
-
-        <div className="space-y-5">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <StatCard label="Enrolled courses" value={String(student.courses)} />
-            <StatCard label="Test attempts" value={String(student.attempts)} />
-            <StatCard label="Average score" value="74%" />
-          </div>
-
-          <Panel>
-            <h2 className="text-base font-semibold text-ink">Enrolled courses</h2>
-            <ul className="mt-4 space-y-3">
-              {courses.slice(0, student.courses || 1).map((course) =>
-              <li key={course.id} className="flex items-center gap-4 rounded-xl border border-line p-3.5">
-                  <img src={course.thumbnail} alt="" className="h-11 w-16 rounded-lg object-cover" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13.5px] font-medium text-ink">{course.title}</p>
-                    <Progress value={course.progress ?? 35} className="mt-2 max-w-[220px]" />
-                  </div>
-                  <Badge tone={course.type === 'free' ? 'green' : 'violet'}>
-                    {course.type === 'free' ? 'Free' : 'Paid'}
-                  </Badge>
-                </li>
-              )}
-            </ul>
-          </Panel>
-
-          <div>
-            <h2 className="mb-3 text-base font-semibold text-ink">Test attempts</h2>
-            <TableWrap>
-              <Table>
-                <thead>
-                  <tr>
-                    <Th>Test</Th>
-                    <Th>Score</Th>
-                    <Th>Accuracy</Th>
-                    <Th>Date</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentResults.map((result) =>
-                  <tr key={result.id}>
-                      <Td className="font-medium text-ink">{result.test}</Td>
-                      <Td className="tabular-nums">{result.score}</Td>
-                      <Td className="tabular-nums">{result.accuracy}</Td>
-                      <Td className="whitespace-nowrap text-ink-muted">{result.date}</Td>
-                    </tr>
-                  )}
-                </tbody>
-              </Table>
-            </TableWrap>
-          </div>
-        </div>
-      </div>
-    </PageShell>);
-
+  const { studentId = '' } = useParams(); const dispatch = useDispatch<AppDispatch>(); const { current: student, loading, saving, error } = useSelector((state: RootState) => state.students);
+  useEffect(() => { if (studentId) dispatch(fetchStudent(studentId)); }, [studentId, dispatch]);
+  if (loading) return <PageShell title="Student" subtitle="Loading profile..." width="max-w-[1200px]"><Panel><p className="text-sm text-ink-muted">Loading student...</p></Panel></PageShell>;
+  if (!student) return <PageShell title="Student" subtitle="Profile unavailable" width="max-w-[1200px]"><Panel>{error && <p className="mb-4 text-sm text-red-600">{error}</p>}<Link to="/admin/students" className={btn('secondary', 'md')}>Back to students</Link></Panel></PageShell>;
+  return <PageShell title={student.name} subtitle={`Registered ${new Date(student.createdAt).toLocaleDateString('en-IN')} · ${student.targetExam || 'No target exam'}`} width="max-w-[1200px]" actions={<><Link to="/admin/students" className={btn('secondary', 'md')}>Back to students</Link><button disabled={saving} onClick={() => dispatch(updateStudentStatus({ id: student._id, isActive: !student.isActive }))} className={btn(student.isActive ? 'danger' : 'primary', 'md')}>{student.isActive ? 'Deactivate' : 'Activate'}</button></>}>
+    <div className="grid gap-5 lg:grid-cols-[1fr_2fr] lg:items-start"><Panel><div className="flex items-center gap-4"><Avatar name={student.name} size={56} /><div><p className="font-bold text-ink">{student.name}</p><StatusBadge status={student.isActive ? 'active' : 'inactive'} /></div></div><dl className="mt-5 space-y-3 border-t border-line pt-4 text-sm"><div className="flex items-center gap-3"><MailIcon className="h-4 w-4 text-ink-muted" /><dd>{student.email}</dd></div><div className="flex items-center gap-3"><PhoneIcon className="h-4 w-4 text-ink-muted" /><dd>{student.mobile}</dd></div><div className="flex items-center gap-3"><TargetIcon className="h-4 w-4 text-ink-muted" /><dd>{student.targetExam || 'Not selected'}</dd></div></dl></Panel><div className="space-y-5"><div className="grid gap-4 sm:grid-cols-3"><StatCard label="Purchased series" value={String(student.purchasedSeries.length)} /><StatCard label="Test attempts" value={String(student.testAttempts.length)} /><StatCard label="Average accuracy" value={`${student.averageAccuracy}%`} /></div><Panel><h2 className="text-base font-semibold text-ink">Purchased test series</h2><div className="mt-4 space-y-2">{!student.purchasedSeries.length && <p className="text-sm text-ink-muted">No purchased series.</p>}{student.purchasedSeries.map((series) => <div key={series._id} className="flex items-center justify-between rounded-xl border border-line p-3"><span className="text-sm font-medium text-ink">{series.title}</span><Badge tone={series.access === 'free' ? 'green' : 'violet'}>{series.access}</Badge></div>)}</div></Panel><div><h2 className="mb-3 text-base font-semibold text-ink">Test attempts</h2><TableWrap><Table><thead><tr><Th>Test</Th><Th>Score</Th><Th>Accuracy</Th><Th>Date</Th></tr></thead><tbody>{!student.testAttempts.length && <tr><td colSpan={4} className="px-5 py-8 text-center text-sm text-ink-muted">No test attempts.</td></tr>}{student.testAttempts.map((attempt) => <tr key={attempt._id}><Td><p className="font-medium text-ink">{attempt.testTitle}</p><p className="text-xs text-ink-muted">{attempt.seriesTitle}</p></Td><Td>{attempt.score}</Td><Td>{attempt.accuracy}%</Td><Td>{new Date(attempt.submittedAt).toLocaleDateString('en-IN')}</Td></tr>)}</tbody></Table></TableWrap></div></div></div>
+  </PageShell>;
 }

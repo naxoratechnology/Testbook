@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy } from 'pdfjs-dist';
+import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -14,6 +16,26 @@ import {
 import { useViewer } from '../../contexts/ViewerContext';
 import { Badge, btn } from './Primitives';
 
+GlobalWorkerOptions.workerSrc = workerUrl;
+
+function PdfPage({ document, pageNumber, thumbnail = false, active = false, onClick }: { document: PDFDocumentProxy; pageNumber: number; thumbnail?: boolean; active?: boolean; onClick?: () => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    let cancelled = false;
+    let renderTask: { cancel: () => void } | undefined;
+    document.getPage(pageNumber).then((page) => {
+      if (cancelled || !canvasRef.current) return;
+      const viewport = page.getViewport({ scale: thumbnail ? 0.24 : 1.35 });
+      const canvas = canvasRef.current; const context = canvas.getContext('2d');
+      if (!context) return;
+      canvas.width = viewport.width; canvas.height = viewport.height;
+      renderTask = page.render({ canvasContext: context, viewport });
+    });
+    return () => { cancelled = true; renderTask?.cancel(); };
+  }, [document, pageNumber, thumbnail]);
+  return <button type="button" onClick={onClick} className={`${thumbnail ? 'w-full rounded-lg border bg-white p-1.5' : 'block cursor-default border-0 bg-transparent p-0'} ${active ? 'border-brand-500 ring-2 ring-brand-300' : 'border-line'}`}><canvas ref={canvasRef} className={thumbnail ? 'h-auto w-full' : 'mx-auto h-auto max-w-full bg-white shadow-soft'} /><span className={`${thumbnail ? 'mt-1 block' : 'sr-only'} text-[10px] text-ink-muted`}>Page {pageNumber}</span></button>;
+}
+
 export function PdfViewer() {
   const { pdf, closePdf } = useViewer();
   const [page, setPage] = useState(1);
@@ -21,6 +43,8 @@ export function PdfViewer() {
   const [full, setFull] = useState(false);
   const [query, setQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [pdfDocument, setPdfDocument] = useState<PDFDocumentProxy | null>(null);
+  const [pdfError, setPdfError] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,6 +56,21 @@ export function PdfViewer() {
       setFull(false);
     }
   }, [pdf]);
+
+  useEffect(() => {
+    if (!pdf?.url) { setPdfDocument(null); return; }
+    let active = true;
+    let loadedDocument: PDFDocumentProxy | null = null;
+    setPdfDocument(null);
+    setPdfError('');
+    fetch(pdf.url).then((response) => { if (!response.ok) throw new Error('Unable to open this PDF.'); return response.arrayBuffer(); }).then((data) => getDocument({ data }).promise).then((document) => {
+        if (!active) return;
+        loadedDocument = document;
+        setPdfDocument(document);
+      })
+      .catch(() => { if (active) setPdfError('Unable to display this PDF. Please try again.'); });
+    return () => { active = false; loadedDocument?.destroy(); };
+  }, [pdf?.url]);
 
   useEffect(() => {
     if (!pdf) return;
@@ -48,6 +87,7 @@ export function PdfViewer() {
 
   if (!pdf) return null;
 
+  const isUploadedPdf = Boolean(pdf.url);
   const total = pdf.pages.length;
   const current = pdf.pages[page - 1];
   const canDownload = pdf.module === 'syllabus';
@@ -146,8 +186,8 @@ export function PdfViewer() {
               
               {full ? <MinimizeIcon className="h-4 w-4" /> : <MaximizeIcon className="h-4 w-4" />}
             </button>
-            {canDownload &&
-            <a href="#" download className={btn('secondary', 'sm', 'ml-1')}>
+            {canDownload && pdf.url &&
+            <a href={pdf.url} download className={btn('secondary', 'sm', 'ml-1')}>
                 <DownloadIcon className="h-4 w-4" />
                 <span className="hidden sm:inline">Download</span>
               </a>
@@ -180,6 +220,10 @@ export function PdfViewer() {
         </header>
 
         {/* Document */}
+        {isUploadedPdf ?
+        <div className="flex min-h-0 flex-1 bg-slate-200">
+          {pdfError ? <div className="mx-auto mt-10 h-fit max-w-md rounded-xl bg-white p-5 text-center text-sm text-red-600 shadow-soft">{pdfError}</div> : pdfDocument ? <><aside className="hidden w-40 shrink-0 overflow-y-auto border-r border-line bg-slate-100 p-3 sm:block"><div className="space-y-3">{Array.from({ length: pdfDocument.numPages }, (_, index) => <PdfPage key={index + 1} document={pdfDocument} pageNumber={index + 1} thumbnail active={page === index + 1} onClick={() => { setPage(index + 1); document.getElementById(`pdf-page-${index + 1}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} />)}</div></aside><div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-6"><div className="mx-auto max-w-4xl space-y-5">{Array.from({ length: pdfDocument.numPages }, (_, index) => <div id={`pdf-page-${index + 1}`} key={index + 1} className="scroll-mt-4" onMouseEnter={() => setPage(index + 1)}><PdfPage document={pdfDocument} pageNumber={index + 1} /></div>)}</div></div></> : <div className="flex min-h-[70vh] flex-1 items-center justify-center text-sm text-ink-muted">Opening PDF...</div>}
+        </div> :
         <div ref={scrollRef} className="min-h-0 flex-1 overflow-auto px-3 py-5 sm:px-6 sm:py-8">
           <article
             className="mx-auto max-w-3xl origin-top rounded-lg bg-white p-6 shadow-soft ring-1 ring-line sm:p-10"
@@ -209,10 +253,10 @@ export function PdfViewer() {
             </div>
             <p className="mt-10 text-center text-xs text-ink-muted">Page {page} of {total}</p>
           </article>
-        </div>
+        </div>}
 
         {/* Pager */}
-        <footer className="flex items-center justify-between gap-3 border-t border-line bg-white px-3 py-2.5 sm:px-4">
+        {!isUploadedPdf && <footer className="flex items-center justify-between gap-3 border-t border-line bg-white px-3 py-2.5 sm:px-4">
           <button
             type="button"
             onClick={() => go(-1)}
@@ -242,7 +286,7 @@ export function PdfViewer() {
             
             Next <ChevronRightIcon className="h-4 w-4" />
           </button>
-        </footer>
+        </footer>}
       </div>
     </div>);
 

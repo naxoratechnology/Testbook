@@ -1,0 +1,12 @@
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import axios from 'axios';
+import { dashboardApi } from './dashboard.api';
+type Data = Record<string, any>;
+type State = { home: Data | null; student: Data | null; admin: Data | null; loading: boolean; error: string | null };
+const initialState: State = { home: null, student: null, admin: null, loading: false, error: null };
+const message = (error: unknown) => axios.isAxiosError(error) ? error.response?.data?.message || 'Dashboard request failed.' : 'Dashboard request failed.';
+export const fetchHomeDashboard = createAsyncThunk<Data, void, { rejectValue: string }>('dashboard/home', async (_, api) => { try { return (await dashboardApi.home()).data.data; } catch (error) { return api.rejectWithValue(message(error)); } });
+export const fetchStudentDashboard = createAsyncThunk<Data, void, { rejectValue: string }>('dashboard/student', async (_, api) => { try { return (await dashboardApi.student()).data.data; } catch (error) { return api.rejectWithValue(message(error)); } });
+export const fetchAdminDashboard = createAsyncThunk<Data, void, { rejectValue: string }>('dashboard/admin', async (_, api) => { try { return (await dashboardApi.admin()).data.data; } catch (error) { return api.rejectWithValue(message(error)); } });
+const slice = createSlice({ name: 'dashboard', initialState, reducers: {}, extraReducers: (builder) => { [fetchHomeDashboard, fetchStudentDashboard, fetchAdminDashboard].forEach((thunk) => { builder.addCase(thunk.pending, (state) => { state.loading = true; state.error = null; }); builder.addCase(thunk.rejected, (state, action) => { state.loading = false; state.error = action.payload || 'Unable to load dashboard.'; }); }); builder.addCase(fetchHomeDashboard.fulfilled, (state, action) => { state.loading = false; state.home = action.payload; }); builder.addCase(fetchStudentDashboard.fulfilled, (state, action) => { state.loading = false; state.student = action.payload; }); builder.addCase(fetchAdminDashboard.fulfilled, (state, action) => { state.loading = false; state.admin = action.payload; }); } });
+export default slice.reducer;

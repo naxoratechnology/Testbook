@@ -1,9 +1,13 @@
 const Affairs = require('./currentAffairs.model');
+const Attempt = require('./currentAffairs.attempt.model');
 const { uploadPdf } = require('./currentAffairs.upload');
 const { destroy } = require('../../config/cloudinary');
-async function create(data, file, userId) { const item = new Affairs({ ...data, createdBy: userId, pdfUrl: 'pending', pdfPublicId: 'pending' }); Object.assign(item, await uploadPdf(file, item._id.toString())); await item.save(); return item; }
-async function list(admin = false) { return Affairs.find(admin ? {} : { status: 'published' }).sort({ date: -1 }).lean(); }
-async function find(id, admin = false) { const item = await Affairs.findOne(admin ? { _id: id } : { _id: id, status: 'published' }).lean(); if (!item) throw Object.assign(new Error('Current affairs entry not found.'), { statusCode: 404 }); return item; }
+const notifications = require('../notification/notification.service');
+async function create(data, file, userId) { const item = new Affairs({ ...data, createdBy: userId, pdfUrl: 'pending', pdfPublicId: 'pending' }); Object.assign(item, await uploadPdf(file, item._id.toString())); await item.save(); if (item.status === 'published') await notifications.publish({ title: 'New current affairs update', message: item.title, type: 'current-affairs', href: `/current-affairs/${item._id}`, userId }); return item; }
+function publicEntry(item) { return { ...item, questions: (item.questions || []).map(({ correctAnswer, explanation, ...question }) => question) }; }
+async function list(admin = false) { const items = await Affairs.find(admin ? {} : { status: 'published' }).sort({ date: -1 }).lean(); return admin ? items : items.map(publicEntry); }
+async function find(id, admin = false) { const item = await Affairs.findOne(admin ? { _id: id } : { _id: id, status: 'published' }).lean(); if (!item) throw Object.assign(new Error('Current affairs entry not found.'), { statusCode: 404 }); return admin ? item : publicEntry(item); }
+async function attempt(id, userId, answers = {}) { const item = await Affairs.findOne({ _id: id, status: 'published' }); if (!item) throw Object.assign(new Error('Current affairs entry not found.'), { statusCode: 404 }); let correct = 0; let incorrect = 0; let unanswered = 0; item.questions.forEach((question) => { const answer = answers[question._id.toString()]; if (answer === undefined || answer === null) unanswered += 1; else if (Number(answer) === question.correctAnswer) correct += 1; else incorrect += 1; }); const saved = await Attempt.create({ user: userId, currentAffairs: id, answers, correct, incorrect, unanswered, score: correct }); return { ...saved.toObject(), title: item.title, questions: item.questions.map((question) => question.toObject()) }; }
 async function update(id, data) { const item = await Affairs.findByIdAndUpdate(id, data, { new: true, runValidators: true }); if (!item) throw Object.assign(new Error('Current affairs entry not found.'), { statusCode: 404 }); return item; }
 async function remove(id) { const item = await Affairs.findByIdAndDelete(id); if (!item) throw Object.assign(new Error('Current affairs entry not found.'), { statusCode: 404 }); await destroy(item.pdfPublicId, 'raw'); }
-module.exports = { create, list, find, update, remove };
+module.exports = { create, list, find, update, remove, attempt };

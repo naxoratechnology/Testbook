@@ -7,4 +7,5 @@ const userList = run(async (req, res) => res.json({ success: true, data: { notif
 const update = run(async (req, res) => { const { value, errors } = validation.validate(req.body); if (Object.keys(errors).length) return res.status(400).json({ success: false, message: 'Validation failed.', errors }); return res.json({ success: true, data: { notification: await service.update(req.params.id, value) } }); });
 const remove = run(async (req, res) => { await service.remove(req.params.id); return res.json({ success: true, message: 'Notification deleted successfully.' }); });
 const markRead = run(async (req, res) => res.json({ success: true, data: { notification: await service.markRead(req.params.id, req.auth.sub) } }));
-module.exports = { create, adminList, userList, update, remove, markRead };
+const markAllRead = run(async (req, res) => { await service.markAllRead(req.auth.sub); return res.json({ success: true, message: 'All notifications marked as read.' }); });
+module.exports = { create, adminList, userList, update, remove, markRead, markAllRead };

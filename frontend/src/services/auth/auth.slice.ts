@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { User } from '../../types';
-import { authApiService, loginSchema, registerSchema, LoginPayload, RegisterPayload } from './auth.api';
+import { authApiService, changePasswordSchema, loginSchema, registerSchema, ChangePasswordPayload, LoginPayload, RegisterPayload } from './auth.api';
 
 type AuthState = { user: User | null; loading: boolean; error: string | null };
 const initialState: AuthState = { user: null, loading: false, error: null };
@@ -17,6 +17,11 @@ export const register = createAsyncThunk<User, RegisterPayload, { rejectValue: s
   catch (error) { return rejectWithValue(errorMessage(error)); }
 });
 export const logout = createAsyncThunk('auth/logout', async () => { await authApiService.logout(); });
+export const restoreSession = createAsyncThunk<User, void, { rejectValue: string }>('auth/me', async (_, { rejectWithValue }) => {
+  try { return mapUser((await authApiService.me()).data.data.user); }
+  catch (error) { return rejectWithValue(errorMessage(error)); }
+});
+export const changePassword = createAsyncThunk<string, ChangePasswordPayload, { rejectValue: string }>('auth/changePassword', async (data, { rejectWithValue }) => { try { await changePasswordSchema.validate(data, { abortEarly: false }); await authApiService.changePassword({ currentPassword: data.currentPassword, newPassword: data.newPassword }); return 'Password updated successfully.'; } catch (error) { return rejectWithValue(errorMessage(error)); } });
 
 const slice = createSlice({
   name: 'auth',
@@ -29,7 +34,13 @@ const slice = createSlice({
     .addCase(register.pending, (state) => { state.loading = true; state.error = null; })
     .addCase(register.fulfilled, (state, action) => { state.loading = false; state.user = action.payload; })
     .addCase(register.rejected, (state, action) => { state.loading = false; state.error = action.payload || 'Registration failed.'; })
-    .addCase(logout.fulfilled, (state) => { state.user = null; }),
+    .addCase(logout.fulfilled, (state) => { state.user = null; })
+    .addCase(restoreSession.pending, (state) => { state.loading = true; })
+    .addCase(restoreSession.fulfilled, (state, action) => { state.loading = false; state.user = action.payload; })
+    .addCase(restoreSession.rejected, (state) => { state.loading = false; state.user = null; })
+    .addCase(changePassword.pending, (state) => { state.loading = true; state.error = null; })
+    .addCase(changePassword.fulfilled, (state) => { state.loading = false; })
+    .addCase(changePassword.rejected, (state, action) => { state.loading = false; state.error = action.payload || 'Unable to update password.'; }),
 });
 export const { clearError } = slice.actions;
 export default slice.reducer;

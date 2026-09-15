@@ -1,6 +1,6 @@
 const express = require('express');
 const controller = require('./student.controller');
-const { requireAuth, requireRole } = require('../../middleware/auth.middleware');
+const { requireAuth, requireRole } = require('../auth/auth.middleware');
 
 const router = express.Router();
 router.use(requireAuth, requireRole('admin'));

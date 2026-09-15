@@ -1,8 +1,12 @@
 const router = require('express').Router();
 const controller = require('./testSeries.controller');
-const { requireAuth, requireRole } = require('../auth/auth.middleware');
-router.get('/', controller.list);
-router.get('/:id', controller.detail);
+const { requireAuth, requireRole, optionalAuth } = require('../auth/auth.middleware');
+router.get('/', optionalAuth, controller.list);
+router.get('/admin', requireAuth, requireRole('admin'), controller.adminList);
+router.get('/admin/:id', requireAuth, requireRole('admin'), controller.adminDetail);
+router.get('/:id', optionalAuth, controller.detail);
+router.post('/:id/checkout', requireAuth, requireRole('student'), controller.checkout);
+router.post('/:id/checkout/verify', requireAuth, requireRole('student'), controller.verifyPayment);
 router.post('/', requireAuth, requireRole('admin'), controller.create);
 router.patch('/:id', requireAuth, requireRole('admin'), controller.update);
 router.delete('/:id', requireAuth, requireRole('admin'), controller.remove);

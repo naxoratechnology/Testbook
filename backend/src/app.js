@@ -11,8 +11,11 @@ const notesRoutes = require('./modules/notes/notes.routes');
 const currentAffairsRoutes = require('./modules/currentAffairs/currentAffairs.routes');
 const syllabusRoutes = require('./modules/syllabus/syllabus.routes');
 const previousPaperRoutes = require('./modules/previousPaper/previousPaper.routes');
-const notificationRoutes = require('./modules/notification/notification.routes');
+const noticeRoutes = require('./modules/notices/notice.routes');
 const studentRoutes = require('./modules/student/student.routes');
+const settingsRoutes = require('./modules/settings/settings.routes');
+const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
+const notificationRoutes = require('./modules/notification/notification.routes');
 const env = require('./config/env');
 const app = express();
 
@@ -91,8 +94,11 @@ app.use('/api/v1/notes', notesRoutes);
 app.use('/api/v1/current-affairs', currentAffairsRoutes);
 app.use('/api/v1/syllabus', syllabusRoutes);
 app.use('/api/v1/previous-papers', previousPaperRoutes);
-app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/notices', noticeRoutes);
 app.use('/api/v1/students', studentRoutes);
+app.use('/api/v1/settings', settingsRoutes);
+app.use('/api/v1/dashboard', dashboardRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 /*
 |--------------------------------------------------------------------------

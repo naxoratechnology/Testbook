@@ -5,4 +5,6 @@ async function userList(userId) { return Notification.find({ $or: [{ audience: '
 async function update(id, data) { const item = await Notification.findByIdAndUpdate(id, data, { new: true, runValidators: true }); if (!item) throw Object.assign(new Error('Notification not found.'), { statusCode: 404 }); return item; }
 async function remove(id) { if (!await Notification.findByIdAndDelete(id)) throw Object.assign(new Error('Notification not found.'), { statusCode: 404 }); }
 async function markRead(id, userId) { const item = await Notification.findOneAndUpdate({ _id: id, $or: [{ audience: 'all' }, { recipients: userId }] }, { $addToSet: { readBy: userId } }, { new: true }); if (!item) throw Object.assign(new Error('Notification not found.'), { statusCode: 404 }); return item; }
-module.exports = { create, adminList, userList, update, remove, markRead };
+async function markAllRead(userId) { await Notification.updateMany({ $or: [{ audience: 'all' }, { recipients: userId }], readBy: { $ne: userId } }, { $addToSet: { readBy: userId } }); }
+async function publish({ title, message, type, href, userId }) { return Notification.create({ title, message, type, href, audience: 'all', createdBy: userId }); }
+module.exports = { create, adminList, userList, update, remove, markRead, markAllRead, publish };

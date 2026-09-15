@@ -5,6 +5,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { PageShell, Panel } from '../components/ui/PageShell';
 import { Badge, Button, Field, Input, btn } from '../components/ui/Primitives';
 import { Avatar } from '../components/layout/Navbar';
+import { useDispatch, useSelector } from 'react-redux';
+import { changePassword } from '../services/auth/auth.slice';
+import type { AppDispatch, RootState } from '../store';
 
 export function Profile() {
   const { user, logout } = useAuth();
@@ -12,6 +15,11 @@ export function Profile() {
   const [emailAlerts, setEmailAlerts] = useState(true);
   const [dailyCA, setDailyCA] = useState(true);
   const [saved, setSaved] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const authLoading = useSelector((state: RootState) => state.auth.loading);
+  const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+  const [passwordError, setPasswordError] = useState('');
+  const submitPassword = async (event: React.FormEvent) => { event.preventDefault(); setSaved(false); setPasswordError(''); try { await dispatch(changePassword(passwords)).unwrap(); setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' }); setSaved(true); } catch (failure) { setPasswordError(String(failure)); } };
 
   if (!user) {
     return (
@@ -72,25 +80,22 @@ export function Profile() {
             </div>
             <form
               className="mt-4 grid gap-4 sm:grid-cols-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                setSaved(true);
-                window.setTimeout(() => setSaved(false), 2200);
-              }}>
+              onSubmit={submitPassword}>
               
               <Field label="Current password" className="sm:col-span-2">
-                <Input type="password" placeholder="••••••••" autoComplete="current-password" />
+                <Input required type="password" value={passwords.currentPassword} onChange={(event) => setPasswords((value) => ({ ...value, currentPassword: event.target.value }))} placeholder="Current password" autoComplete="current-password" />
               </Field>
               <Field label="New password">
-                <Input type="password" placeholder="Minimum 8 characters" autoComplete="new-password" />
+                <Input required minLength={8} type="password" value={passwords.newPassword} onChange={(event) => setPasswords((value) => ({ ...value, newPassword: event.target.value }))} placeholder="Minimum 8 characters" autoComplete="new-password" />
               </Field>
               <Field label="Confirm new password">
-                <Input type="password" placeholder="Re-enter password" autoComplete="new-password" />
+                <Input required minLength={8} type="password" value={passwords.confirmPassword} onChange={(event) => setPasswords((value) => ({ ...value, confirmPassword: event.target.value }))} placeholder="Re-enter password" autoComplete="new-password" />
               </Field>
               <div className="flex items-center gap-3 sm:col-span-2">
-                <Button type="submit">Update password</Button>
+                <Button type="submit" disabled={authLoading}>{authLoading ? 'Updating...' : 'Update password'}</Button>
                 {saved && <span className="text-[13px] font-medium text-emerald-600">Password updated</span>}
               </div>
+              {passwordError && <p className="text-[13px] text-red-600 sm:col-span-2">{passwordError}</p>}
             </form>
           </Panel>
 

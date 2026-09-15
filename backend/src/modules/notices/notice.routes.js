@@ -1,0 +1,11 @@
+const router = require('express').Router();
+const controller = require('./notice.controller');
+const { requireAuth, requireRole } = require('../auth/auth.middleware');
+router.get('/', controller.list);
+router.get('/admin', requireAuth, requireRole('admin'), controller.adminList);
+router.get('/admin/:id', requireAuth, requireRole('admin'), controller.adminDetail);
+router.get('/:id', controller.detail);
+router.post('/', requireAuth, requireRole('admin'), controller.create);
+router.patch('/:id', requireAuth, requireRole('admin'), controller.update);
+router.delete('/:id', requireAuth, requireRole('admin'), controller.remove);
+module.exports = router;

@@ -15,4 +15,12 @@ function login(body = {}) {
   if (!value.password) errors.password = 'Password is required.';
   return { value, errors };
 }
-module.exports = { register, login };
+function changePassword(body = {}) {
+  const value = { currentPassword: String(body.currentPassword || ''), newPassword: String(body.newPassword || '') };
+  const errors = {};
+  if (!value.currentPassword) errors.currentPassword = 'Current password is required.';
+  if (value.newPassword.length < 8 || value.newPassword.length > 72) errors.newPassword = 'New password must be 8-72 characters.';
+  if (value.currentPassword && value.currentPassword === value.newPassword) errors.newPassword = 'New password must be different from the current password.';
+  return { value, errors };
+}
+module.exports = { register, login, changePassword };
