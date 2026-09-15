@@ -25,7 +25,7 @@ export function AdminCourseForm() {
     if (courseId) dispatch(fetchCourse(courseId)); else dispatch(clearCurrentCourse());
   }, [courseId, dispatch]);
   useEffect(() => {
-    if (current && current._id === courseId) setCourse({ title: current.title, description: current.description, exam: current.exam, category: current.category, instructor: current.instructor, thumbnail: current.thumbnail, access: current.access, price: String(current.price), status: current.status });
+    if (current && current._id === courseId) setCourse({ title: current.title, description: current.description, exam: current.exam, category: current.category, instructor: current.instructor, thumbnail: current.thumbnail || '', access: current.access, price: String(current.price), status: current.status });
   }, [current, courseId]);
 
   const update = (key: keyof FormState, value: string) => setCourse((item) => ({ ...item, [key]: value }));
@@ -55,7 +55,7 @@ export function AdminCourseForm() {
         <Field label="Course name" className="sm:col-span-2"><Input required value={course.title} onChange={(e) => update('title', e.target.value)} placeholder="SSC CGL Complete Preparation" /></Field>
         <Field label="Short description" className="sm:col-span-2"><Textarea required rows={3} value={course.description} onChange={(e) => update('description', e.target.value)} placeholder="What will students learn?" /></Field>
         <Field label="Exam"><Input required value={course.exam} onChange={(e) => update('exam', e.target.value)} /></Field><Field label="Category"><Input required value={course.category} onChange={(e) => update('category', e.target.value)} /></Field>
-        <Field label="Instructor"><Input required value={course.instructor} onChange={(e) => update('instructor', e.target.value)} /></Field><Field label="Thumbnail URL"><Input required type="url" value={course.thumbnail} onChange={(e) => update('thumbnail', e.target.value)} placeholder="https://..." /></Field>
+        <Field label="Instructor"><Input required value={course.instructor} onChange={(e) => update('instructor', e.target.value)} /></Field><Field label="Thumbnail URL (optional)"><Input type="url" value={course.thumbnail} onChange={(e) => update('thumbnail', e.target.value)} placeholder="https://..." /></Field>
         <Field label="Access"><Select value={course.access} onChange={(e) => update('access', e.target.value)}><option value="paid">Paid</option><option value="free">Free</option></Select></Field>
         {course.access === 'paid' && <Field label="Price (₹)"><Input required type="number" min="1" value={course.price} onChange={(e) => update('price', e.target.value)} /></Field>}
         <Field label="Status"><Select value={course.status} onChange={(e) => update('status', e.target.value)}><option value="draft">Draft</option><option value="published">Published</option><option value="unpublished">Unpublished</option></Select></Field>

@@ -27,7 +27,7 @@ export const courseSchema = yup.object({
   exam: yup.string().trim().required('Exam is required.'),
   category: yup.string().trim().required('Category is required.'),
   instructor: yup.string().trim().required('Instructor is required.'),
-  thumbnail: yup.string().trim().url('Enter a valid thumbnail URL.').required('Thumbnail is required.'),
+  thumbnail: yup.string().trim().url('Enter a valid thumbnail URL.').default(''),
   access: yup.mixed<CourseAccess>().oneOf(['free', 'paid']).required(),
   price: yup.number().min(0).when('access', { is: 'paid', then: (schema) => schema.moreThan(0, 'Price must be greater than zero.') }),
   status: yup.mixed<CourseStatus>().oneOf(['draft', 'published', 'unpublished']).required(),

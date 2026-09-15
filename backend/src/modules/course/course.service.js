@@ -3,9 +3,10 @@ const Enrollment = require('./course.enrollment.model');
 const { uploadLesson } = require('./course.upload');
 const { destroy } = require('../../config/cloudinary');
 const notifications = require('../notification/notification.service');
+const defaultThumbnail = '/course-placeholder.svg';
 
 function publicCourse(course, unlocked = false) {
-  return { ...course, lectures: (course.lectures || []).map((lecture) => {
+  return { ...course, thumbnail: course.thumbnail || defaultThumbnail, lectures: (course.lectures || []).map((lecture) => {
     const { publicId, pdfPublicId, pdfResourceType, resourceType, ...safe } = lecture;
     if (course.access === 'paid' && !unlocked && !lecture.isPreview) return { ...safe, url: '', pdfUrl: '' };
     return safe;

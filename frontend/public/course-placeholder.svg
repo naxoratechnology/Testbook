@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title">
+  <title id="title">Course</title>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eff6ff"/><stop offset="1" stop-color="#dbeafe"/></linearGradient></defs>
+  <rect width="640" height="360" fill="url(#bg)"/>
+  <g fill="none" stroke="#1267b1" stroke-linecap="round" stroke-linejoin="round" stroke-width="14">
+    <path d="M238 105h120c24 0 44 20 44 44v126H282c-24 0-44-20-44-44V105Z"/>
+    <path d="M402 149h-76c-24 0-44 20-44 44v82M282 275h120"/>
+  </g>
+</svg>

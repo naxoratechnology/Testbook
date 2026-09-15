@@ -12,7 +12,7 @@ function validateCourse(body = {}) {
     status: ['draft', 'published', 'unpublished'].includes(body.status) ? body.status : 'draft',
   };
   const errors = {};
-  ['title', 'description', 'exam', 'category', 'instructor', 'thumbnail'].forEach((key) => { if (!value[key]) errors[key] = key + ' is required.'; });
+  ['title', 'description', 'exam', 'category', 'instructor'].forEach((key) => { if (!value[key]) errors[key] = key + ' is required.'; });
   if (value.access === 'paid' && (!Number.isFinite(value.price) || value.price <= 0)) errors.price = 'Paid courses require a price greater than zero.';
   return { value, errors };
 }

@@ -3,16 +3,14 @@ import { Link } from 'react-router-dom';
 import { ClockIcon, FileTextIcon, PlayCircleIcon } from 'lucide-react';
 import { Course } from '../../types';
 import { Badge, Progress, btn } from '../ui/Primitives';
+import { CourseThumbnail } from '../courses/CourseThumbnail';
 
 export function CourseCard({ course }: {course: Course;}) {
   const free = course.type === 'free';
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white transition-shadow duration-200 ease-smooth hover:shadow-soft">
       <div className="relative aspect-[16/9] overflow-hidden bg-canvas">
-        <img
-          src={course.thumbnail}
-          alt=""
-          className="h-full w-full object-cover transition-transform duration-300 ease-smooth group-hover:scale-[1.03]" />
+        <CourseThumbnail src={course.thumbnail} alt={course.title} className="h-full w-full object-cover transition-transform duration-300 ease-smooth group-hover:scale-[1.03]" />
         
         <span className="absolute left-3 top-3">
           <Badge tone={free ? 'green' : 'violet'}>{free ? 'Free' : 'Paid'}</Badge>

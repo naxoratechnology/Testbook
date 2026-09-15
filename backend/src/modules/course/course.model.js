@@ -20,7 +20,7 @@ const courseSchema = new mongoose.Schema({
   exam: { type: String, required: true, trim: true, index: true },
   category: { type: String, required: true, trim: true, index: true },
   instructor: { type: String, required: true, trim: true, maxlength: 120 },
-  thumbnail: { type: String, required: true, trim: true },
+  thumbnail: { type: String, trim: true, default: '' },
   access: { type: String, enum: ['free', 'paid'], required: true, index: true },
   price: { type: Number, min: 0, default: 0 },
   lectures: { type: [lessonSchema], default: [] },
