@@ -7,6 +7,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 // Atlas SRV records require a resolver that supports external DNS queries.
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
+
 const app = require('./app');
 const env = require('./config/env');
 const { connectDatabase, disconnectDatabase } = require('./config/database');
