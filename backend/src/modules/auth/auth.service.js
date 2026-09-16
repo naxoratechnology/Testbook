@@ -19,5 +19,6 @@ async function login(identifier, password) {
   return { user: output(user), ...issue(user) };
 }
 async function me(id) { const user = await User.findById(id); if (!user || !user.isActive) throw Object.assign(new Error('User account not found.'), { statusCode: 404 }); return output(user); }
+async function refresh(refreshToken) { if (!refreshToken) throw Object.assign(new Error('Refresh token is required.'), { statusCode: 401 }); let payload; try { payload = jwt.verify(refreshToken, env.jwt.refreshSecret); } catch (_error) { throw Object.assign(new Error('Invalid or expired refresh token.'), { statusCode: 401 }); } const user = await User.findById(payload.sub); if (!user || !user.isActive) throw Object.assign(new Error('User account not found.'), { statusCode: 401 }); return { user: output(user), ...issue(user) }; }
 async function changePassword(id, currentPassword, newPassword) { const user = await User.findById(id).select('+password'); if (!user || !user.isActive) throw Object.assign(new Error('User account not found.'), { statusCode: 404 }); if (!(await bcrypt.compare(currentPassword, user.password))) throw Object.assign(new Error('Current password is incorrect.'), { statusCode: 400 }); user.password = await bcrypt.hash(newPassword, 12); await user.save(); }
-module.exports = { register, login, me, changePassword };
+module.exports = { register, login, me, refresh, changePassword };

@@ -28,6 +28,7 @@ export const authApiService = {
   me: () => authApi.get('/auth/me'),
   login: (data: LoginPayload) => authApi.post('/auth/login', data),
   register: (data: RegisterPayload) => authApi.post('/auth/register', data),
+  refresh: () => authApi.post('/auth/refresh'),
   logout: () => authApi.post('/auth/logout'),
   changePassword: (data: Omit<ChangePasswordPayload, 'confirmPassword'>) => authApi.patch('/auth/password', data),
 };

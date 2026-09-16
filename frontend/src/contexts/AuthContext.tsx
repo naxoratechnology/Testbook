@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { login as authLogin, register as authRegister, logout as authLogout, restoreSession } from '../services/auth/auth.slice';
 import type { AppDispatch, RootState } from '../store';
 import { ApiNotification, notificationsApiService } from '../services/notifications/notifications.api';
+import { authApiService } from '../services/auth/auth.api';
 
 const API = import.meta.env.VITE_API_URL;
 type AuthData = { name: string; email: string; mobile: string; password: string; targetExam: string };
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<AppNotification[]>([]);
   const dispatch = useDispatch<AppDispatch>();
   useEffect(() => { dispatch(restoreSession()); }, [dispatch]);
+  useEffect(() => { if (!user) return; const refreshSession = () => authApiService.refresh().catch(() => undefined); const timer = window.setInterval(refreshSession, 12 * 60 * 60 * 1000); return () => window.clearInterval(timer); }, [user]);
   useEffect(() => { if (!user) { setItems([]); return; } notificationsApiService.list().then(({ data }) => setItems(data.data.notifications.map((item: ApiNotification) => ({ id: item._id, title: item.title, message: item.message, type: item.type as AppNotification['type'], href: item.href || '/notifications', time: new Date(item.createdAt).toLocaleString('en-IN'), read: item.readBy.some((id) => id === user.id) })))).catch(() => setItems([])); }, [user]);
 
   const request = useCallback(async (path: string, body?: unknown) => {

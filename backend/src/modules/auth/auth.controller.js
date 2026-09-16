@@ -1,10 +1,13 @@
 const service = require('./auth.service');
 const validation = require('./auth.validation');
 const options = { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax' };
-function cookies(res, result) { res.cookie('accessToken', result.accessToken, { ...options, maxAge: 900000 }); res.cookie('refreshToken', result.refreshToken, { ...options, maxAge: 604800000, path: '/api/v1/auth' }); }
+const oneDay = 24 * 60 * 60 * 1000;
+const sevenDays = 7 * oneDay;
+function cookies(res, result) { res.cookie('accessToken', result.accessToken, { ...options, maxAge: oneDay }); res.cookie('refreshToken', result.refreshToken, { ...options, maxAge: sevenDays, path: '/api/v1/auth' }); }
 async function register(req, res, next) { try { const { value, errors } = validation.register(req.body); if (Object.keys(errors).length) return res.status(400).json({ success: false, message: 'Validation failed.', errors }); const result = await service.register(value); cookies(res, result); return res.status(201).json({ success: true, message: 'Registration successful.', data: { user: result.user } }); } catch (e) { return next(e); } }
 async function login(req, res, next) { try { const { value, errors } = validation.login(req.body); if (Object.keys(errors).length) return res.status(400).json({ success: false, message: 'Validation failed.', errors }); const result = await service.login(value.identifier, value.password); cookies(res, result); return res.json({ success: true, message: 'Login successful.', data: { user: result.user } }); } catch (e) { return next(e); } }
 async function me(req, res, next) { try { return res.json({ success: true, data: { user: await service.me(req.auth.sub) } }); } catch (e) { return next(e); } }
+async function refresh(req, res, next) { try { const result = await service.refresh(req.cookies.refreshToken); cookies(res, result); return res.json({ success: true, message: 'Session refreshed.', data: { user: result.user } }); } catch (e) { return next(e); } }
 async function changePassword(req, res, next) { try { const { value, errors } = validation.changePassword(req.body); if (Object.keys(errors).length) return res.status(400).json({ success: false, message: 'Validation failed.', errors }); await service.changePassword(req.auth.sub, value.currentPassword, value.newPassword); return res.json({ success: true, message: 'Password updated successfully.' }); } catch (e) { return next(e); } }
 function logout(_req, res) { res.clearCookie('accessToken'); res.clearCookie('refreshToken', { path: '/api/v1/auth' }); return res.json({ success: true, message: 'Logged out successfully.' }); }
-module.exports = { register, login, me, changePassword, logout };
+module.exports = { register, login, me, refresh, changePassword, logout };

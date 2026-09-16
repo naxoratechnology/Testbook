@@ -18,7 +18,7 @@ export const register = createAsyncThunk<User, RegisterPayload, { rejectValue: s
 });
 export const logout = createAsyncThunk('auth/logout', async () => { await authApiService.logout(); });
 export const restoreSession = createAsyncThunk<User, void, { rejectValue: string }>('auth/me', async (_, { rejectWithValue }) => {
-  try { return mapUser((await authApiService.me()).data.data.user); }
+  try { let response; try { response = await authApiService.me(); } catch (error) { if (!axios.isAxiosError(error) || error.response?.status !== 401) throw error; response = await authApiService.refresh(); } return mapUser(response.data.data.user); }
   catch (error) { return rejectWithValue(errorMessage(error)); }
 });
 export const changePassword = createAsyncThunk<string, ChangePasswordPayload, { rejectValue: string }>('auth/changePassword', async (data, { rejectWithValue }) => { try { await changePasswordSchema.validate(data, { abortEarly: false }); await authApiService.changePassword({ currentPassword: data.currentPassword, newPassword: data.newPassword }); return 'Password updated successfully.'; } catch (error) { return rejectWithValue(errorMessage(error)); } });
