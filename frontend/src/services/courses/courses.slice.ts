@@ -36,6 +36,10 @@ export const deleteCourseLecture = createAsyncThunk<AdminCourse, { courseId: str
   catch (error) { return api.rejectWithValue(message(error)); }
 });
 
+export const uploadCourseThumbnail = createAsyncThunk<AdminCourse, { id: string; file: File }, { rejectValue: string }>('courses/uploadThumbnail', async ({ id, file }, api) => { try { return (await coursesApiService.uploadThumbnail(id, file)).data.data.course; } catch (error) { return api.rejectWithValue(message(error)); } });
+
+export const removeCourseThumbnail = createAsyncThunk<AdminCourse, string, { rejectValue: string }>('course/removeThumbnail', async (id, api) => { try { return (await coursesApiService.removeThumbnail(id)).data.data.course; } catch (error) { return api.rejectWithValue(message(error)); } });
+
 const slice = createSlice({
   name: 'courses', initialState,
   reducers: { clearCourseError: (state) => { state.error = null; }, clearCurrentCourse: (state) => { state.current = null; } },
@@ -49,7 +53,7 @@ const slice = createSlice({
       .addCase(fetchCourse.rejected, (state, action) => { state.loading = false; state.error = action.payload || 'Unable to load course.'; });
     builder.addCase(fetchPublicCourses.pending, (state) => { state.loading = true; state.error = null; }).addCase(fetchPublicCourses.fulfilled, (state, action) => { state.loading = false; state.publicItems = action.payload; }).addCase(fetchPublicCourses.rejected, (state, action) => { state.loading = false; state.error = action.payload || 'Unable to load courses.'; });
     builder.addCase(fetchPublicCourse.pending, (state) => { state.loading = true; state.error = null; state.publicCurrent = null; }).addCase(fetchPublicCourse.fulfilled, (state, action) => { state.loading = false; state.publicCurrent = action.payload; }).addCase(fetchPublicCourse.rejected, (state, action) => { state.loading = false; state.error = action.payload || 'Unable to load course.'; });
-    [createCourse, updateCourse, addCourseLecture, deleteCourseLecture].forEach((thunk) => {
+    [createCourse, updateCourse, addCourseLecture, deleteCourseLecture, uploadCourseThumbnail, removeCourseThumbnail].forEach((thunk) => {
       builder.addCase(thunk.pending, (state) => { state.saving = true; state.error = null; });
       builder.addCase(thunk.fulfilled, (state, action) => {
         state.saving = false; state.current = action.payload;

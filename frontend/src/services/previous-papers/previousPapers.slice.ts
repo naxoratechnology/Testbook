@@ -1,11 +1,12 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { AdminPreviousPaper, CreatePaperPayload, PaperPayload, PreviousPaperAttempt, PublicPreviousPaper, paperSchema, previousPapersApiService } from './previousPapers.api';
+import { PaperCatalog, AdminPreviousPaper, CreatePaperPayload, PaperPayload, PreviousPaperAttempt, PublicPreviousPaper, paperSchema, previousPapersApiService } from './previousPapers.api';
 
-type State = { items: AdminPreviousPaper[]; current: AdminPreviousPaper | null; publicItems: PublicPreviousPaper[]; attemptResult: PreviousPaperAttempt | null; loading: boolean; saving: boolean; error: string | null };
-const initialState: State = { items: [], current: null, publicItems: [], attemptResult: null, loading: false, saving: false, error: null };
+type State = { catalog: PaperCatalog | null; items: AdminPreviousPaper[]; current: AdminPreviousPaper | null; publicItems: PublicPreviousPaper[]; attemptResult: PreviousPaperAttempt | null; loading: boolean; saving: boolean; error: string | null };
+const initialState: State = { catalog: null, items: [], current: null, publicItems: [], attemptResult: null, loading: false, saving: false, error: null };
 const message = (error: unknown) => axios.isAxiosError(error) ? error.response?.data?.message || 'Previous paper request failed.' : error instanceof Error ? error.message : 'Previous paper request failed.';
 
+export const fetchPaperCatalog = createAsyncThunk<PaperCatalog, void, { rejectValue: string }>('previousPapers/catalog', async (_, api) => { try { return (await previousPapersApiService.catalog()).data.data; } catch (error) { return api.rejectWithValue(message(error)); } });
 export const fetchPublicPreviousPapers = createAsyncThunk<PublicPreviousPaper[], void, { rejectValue: string }>('previousPapers/listPublic', async (_, api) => { try { return (await previousPapersApiService.listPublic()).data.data.papers; } catch (error) { return api.rejectWithValue(message(error)); } });
 export const submitPreviousPaperAttempt = createAsyncThunk<PreviousPaperAttempt, { id: string; answers: Record<string, number | null> }, { rejectValue: string }>('previousPapers/attempt', async ({ id, answers }, api) => { try { return (await previousPapersApiService.attempt(id, answers)).data.data.result; } catch (error) { return api.rejectWithValue(message(error)); } });
 export const fetchAdminPreviousPapers = createAsyncThunk<AdminPreviousPaper[], void, { rejectValue: string }>('previousPapers/listAdmin', async (_, api) => { try { return (await previousPapersApiService.listAdmin()).data.data.papers; } catch (error) { return api.rejectWithValue(message(error)); } });
@@ -15,6 +16,7 @@ export const updatePreviousPaper = createAsyncThunk<AdminPreviousPaper, { id: st
 export const deletePreviousPaper = createAsyncThunk<string, string, { rejectValue: string }>('previousPapers/delete', async (id, api) => { try { await previousPapersApiService.remove(id); return id; } catch (error) { return api.rejectWithValue(message(error)); } });
 
 const slice = createSlice({ name: 'previousPapers', initialState, reducers: {}, extraReducers: (builder) => {
+  builder.addCase(fetchPaperCatalog.fulfilled, (state, action) => { state.catalog = action.payload; }).addCase(fetchPaperCatalog.rejected, (state, action) => { state.error = action.payload || 'Unable to load directories.'; });
   builder.addCase(fetchPublicPreviousPapers.pending, (state) => { state.loading = true; state.error = null; }).addCase(fetchPublicPreviousPapers.fulfilled, (state, action) => { state.loading = false; state.publicItems = action.payload; }).addCase(fetchPublicPreviousPapers.rejected, (state, action) => { state.loading = false; state.error = action.payload || 'Unable to load papers.'; });
   builder.addCase(submitPreviousPaperAttempt.pending, (state) => { state.saving = true; state.error = null; }).addCase(submitPreviousPaperAttempt.fulfilled, (state, action) => { state.saving = false; state.attemptResult = action.payload; }).addCase(submitPreviousPaperAttempt.rejected, (state, action) => { state.saving = false; state.error = action.payload || 'Unable to submit paper.'; });
   builder.addCase(fetchAdminPreviousPapers.pending, (state) => { state.loading = true; state.error = null; }).addCase(fetchAdminPreviousPapers.fulfilled, (state, action) => { state.loading = false; state.items = action.payload; }).addCase(fetchAdminPreviousPapers.rejected, (state, action) => { state.loading = false; state.error = action.payload || 'Unable to load papers.'; });

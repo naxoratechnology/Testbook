@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { thumbnailUpload } = require('../../utils/thumbnailUpload');
 const controller = require('./course.controller');
 const { requireAuth, requireRole, optionalAuth } = require('../auth/auth.middleware');
 const { upload } = require('./course.upload');
@@ -9,6 +10,8 @@ router.get('/admin/:id', requireAuth, requireRole('admin'), controller.adminDeta
 router.get('/:id', optionalAuth, controller.detail);
 router.post('/:id/checkout', requireAuth, requireRole('student'), controller.checkout);
 router.post('/:id/checkout/verify', requireAuth, requireRole('student'), controller.verifyPayment);
+router.delete('/:id/thumbnail', requireAuth, requireRole('admin'), controller.removeThumbnail);
+router.post('/:id/thumbnail', requireAuth, requireRole('admin'), thumbnailUpload, controller.uploadThumbnail);
 router.post('/', requireAuth, requireRole('admin'), controller.create);
 router.patch('/:id', requireAuth, requireRole('admin'), controller.update);
 router.delete('/:id', requireAuth, requireRole('admin'), controller.remove);

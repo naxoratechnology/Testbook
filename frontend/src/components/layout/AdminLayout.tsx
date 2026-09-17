@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
+  FlagIcon,
   MegaphoneIcon,
   BookOpenIcon,
   CalendarDaysIcon,
@@ -24,6 +25,7 @@ const items = [
 { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboardIcon },
 { to: '/admin/courses', label: 'Courses', icon: BookOpenIcon },
 { to: '/admin/test-series', label: 'Test Series', icon: ListChecksIcon },
+{ to: '/admin/question-reports', label: 'Reported Questions', icon: FlagIcon },
 { to: '/admin/notes', label: 'Notes', icon: NotebookTextIcon },
 { to: '/admin/current-affairs', label: 'Current Affairs', icon: CalendarDaysIcon },
 { to: '/admin/notices', label: 'Notices', icon: MegaphoneIcon },

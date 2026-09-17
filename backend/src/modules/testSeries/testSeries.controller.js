@@ -16,3 +16,11 @@ const purchase = run(async (req, res) => res.status(201).json({ success: true, d
 const attempt = run(async (req, res) => res.status(201).json({ success: true, data: { result: await service.attempt(req.auth.sub, req.params.seriesId, req.params.testId, req.body.answers || {}) } }));
 const results = run(async (req, res) => res.json({ success: true, data: { results: await service.results(req.auth.sub, req.params.id) } }));
 module.exports = { create, list, adminList, detail, adminDetail, update, remove, addTest, purchase, attempt, results, checkout, verifyPayment };
+
+const { saveThumbnail, removeThumbnail } = require('../../utils/thumbnailUpload');
+const ThumbnailModel = require('./testSeries.model');
+module.exports.uploadThumbnail = run(async (req, res) => res.json({ success: true, data: { series: await saveThumbnail(ThumbnailModel, req.params.id, req.file, 'test-series') } }));
+
+module.exports.removeThumbnail = run(async (req, res) => res.json({ success: true, data: { series: await removeThumbnail(ThumbnailModel, req.params.id) } }));
+module.exports.updateTest = run(async (req, res) => { const { value, errors } = validation.test(req.body); if (Object.keys(errors).length) return res.status(400).json({ success: false, message: 'Validation failed.', errors }); return res.json({ success: true, data: { series: await service.updateTest(req.params.seriesId, req.params.testId, value) } }); });
+module.exports.removeTest = run(async (req, res) => res.json({ success: true, data: { series: await service.removeTest(req.params.seriesId, req.params.testId) } }));

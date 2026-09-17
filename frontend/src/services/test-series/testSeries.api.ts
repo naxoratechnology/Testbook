@@ -9,7 +9,7 @@ export interface PublicSeriesTest extends Omit<SeriesTest, 'questions'> { questi
 export interface PublicTestSeries extends Omit<AdminTestSeries, 'tests'> { purchased: boolean; tests: PublicSeriesTest[] }
 export interface AttemptResult { _id: string; series: string; test: string; testTitle: string; answers: Record<string, number>; score: number; correct: number; incorrect: number; unanswered: number; accuracy: number; totalMarks: number; submittedAt: string; questions: SeriesQuestion[] }
 export interface SeriesTest { _id: string; title: string; duration: number; questions: SeriesQuestion[]; status: SeriesStatus; createdAt: string }
-export interface AdminTestSeries { _id: string; title: string; description: string; exam: string; kind: SeriesKind; access: 'free' | 'paid'; price: number; difficulty: 'Easy' | 'Moderate' | 'Hard'; languages: string; tests: SeriesTest[]; status: SeriesStatus; createdAt: string }
+export interface AdminTestSeries { thumbnail?: string; _id: string; title: string; description: string; exam: string; kind: SeriesKind; access: 'free' | 'paid'; price: number; difficulty: 'Easy' | 'Moderate' | 'Hard'; languages: string; tests: SeriesTest[]; status: SeriesStatus; createdAt: string }
 export interface SeriesPayload { title: string; description: string; exam: string; kind: SeriesKind; access: 'free' | 'paid'; price: number; difficulty: 'Easy' | 'Moderate' | 'Hard'; languages: string; status: SeriesStatus }
 export interface TestPayload { title: string; duration: number; questions: SeriesQuestion[]; status: SeriesStatus }
 
@@ -23,6 +23,10 @@ export const testSchema = yup.object({ title: yup.string().trim().required('Test
 
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL, withCredentials: true });
 export const testSeriesApiService = {
+  updateTest: (seriesId: string, testId: string, payload: TestPayload) => api.patch(`/test-series/${seriesId}/tests/${testId}`, payload),
+  removeTest: (seriesId: string, testId: string) => api.delete(`/test-series/${seriesId}/tests/${testId}`),
+  removeThumbnail: (id: string) => api.delete(`/test-series/${id}/thumbnail`),
+  uploadThumbnail: (id: string, file: File) => { const data = new FormData(); data.append('thumbnail', file); return api.post(`/test-series/${id}/thumbnail`, data); },
   listPublic: (params?: { exam?: string; access?: string }) => api.get('/test-series', { params }), getPublic: (id: string) => api.get(`/test-series/${id}`),
   checkout: (id: string) => api.post(`/test-series/${id}/checkout`),
   verifyCheckout: (id: string, payload: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => api.post(`/test-series/${id}/checkout/verify`, payload),

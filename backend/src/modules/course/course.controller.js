@@ -34,8 +34,8 @@ const addLecture = run(async (req, res) => {
     video: received.filter((file) => file.fieldname === 'video').slice(0, 1),
     pdf: received.filter((file) => file.fieldname === 'pdf').slice(0, 1),
   };
-  if (!files.video[0]) {
-    return res.status(400).json({ success: false, message: 'Lecture video is required. Select a valid video file and try again.' });
+  if (Boolean(files.video[0]) === Boolean(String(req.body.youtubeUrl || '').trim())) {
+    return res.status(400).json({ success: false, message: 'Provide either one uploaded video or a YouTube URL, not both.' });
   }
   if (received.filter((file) => file.fieldname === 'video').length > 1 || received.filter((file) => file.fieldname === 'pdf').length > 1) {
     return res.status(400).json({ success: false, message: 'Upload only one video and one PDF per lecture.' });
@@ -48,3 +48,9 @@ const removeLesson = run(async (req, res) => {
   return res.json({ success: true, data: { course } });
 });
 module.exports = { create, list, adminList, detail, adminDetail, update, remove, addLesson, addLecture, removeLesson, checkout, verifyPayment };
+
+const { saveThumbnail, removeThumbnail } = require('../../utils/thumbnailUpload');
+const ThumbnailModel = require('./course.model');
+module.exports.uploadThumbnail = run(async (req, res) => res.json({ success: true, data: { course: await saveThumbnail(ThumbnailModel, req.params.id, req.file, 'courses') } }));
+
+module.exports.removeThumbnail = run(async (req, res) => res.json({ success: true, data: { course: await removeThumbnail(ThumbnailModel, req.params.id) } }));

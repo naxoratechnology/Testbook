@@ -17,6 +17,8 @@ const testSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const seriesSchema = new mongoose.Schema({
+  thumbnail: { type: String, default: '', trim: true },
+  thumbnailPublicId: { type: String, default: '', select: false },
   title: { type: String, required: true, trim: true, maxlength: 180, index: true },
   description: { type: String, required: true, trim: true },
   exam: { type: String, required: true, trim: true, index: true },

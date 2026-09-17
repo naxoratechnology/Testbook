@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BellIcon, LockIcon, LogOutIcon, MailIcon, PhoneIcon, TargetIcon } from 'lucide-react';
+import { BookmarkIcon, BellIcon, LockIcon, LogOutIcon, MailIcon, PhoneIcon, TargetIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { PageShell, Panel } from '../components/ui/PageShell';
 import { Badge, Button, Field, Input, btn } from '../components/ui/Primitives';
@@ -60,6 +60,7 @@ export function Profile() {
 
             })}
           </dl>
+          <Link to="/saved-questions" className={btn('secondary', 'md', 'mt-6 w-full')}><BookmarkIcon className="h-4 w-4" /> Saved Questions</Link>
           <button
             type="button"
             onClick={() => {

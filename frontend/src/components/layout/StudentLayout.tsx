@@ -61,7 +61,7 @@ function Footer() {
 
   return (
     <footer className="border-t border-line bg-white">
-      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
+      <div className="mx-auto grid w-full max-w-none gap-8 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-6">
         <div>
           <Logo />
           <p className="mt-3 max-w-xs text-sm text-ink-soft">
@@ -83,7 +83,7 @@ function Footer() {
           </div>
         )}
       </div>
-      <div className="border-t border-line px-4 py-5 text-center text-xs text-ink-muted sm:px-6 lg:px-8">
+      <div className="border-t border-line px-4 py-5 text-center text-xs text-ink-muted sm:px-6 lg:px-6">
             © 2026 Chandrabhaga Academy. Built for serious exam preparation.
       </div>
     </footer>);

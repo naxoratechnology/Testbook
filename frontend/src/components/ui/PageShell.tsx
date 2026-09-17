@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 
 export function PageShell({
   title,
@@ -13,8 +14,10 @@ export function PageShell({
 
 
 }: {title?: string;subtitle?: string;actions?: React.ReactNode;children: React.ReactNode;width?: string;}) {
+  const { pathname } = useLocation();
+  const isAdmin = pathname.startsWith('/admin');
   return (
-    <div className={`mx-auto w-full ${width} px-4 py-8 sm:px-6 lg:px-8 lg:py-10`}>
+    <div className={`mx-auto w-full ${isAdmin ? width : 'max-w-none'} px-4 py-8 sm:px-6 ${isAdmin ? 'lg:px-8' : 'lg:px-6'} lg:py-10`}>
       {title &&
       <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
           <div>

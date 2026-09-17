@@ -1,7 +1,13 @@
 const router = require('express').Router();
 const controller = require('./previousPaper.controller');
-const { requireAuth, requireRole } = require('../auth/auth.middleware');
+const { requireAuth, requireRole, optionalAuth } = require('../auth/auth.middleware');
 const { upload } = require('./previousPaper.upload');
+router.use(optionalAuth);
+router.get('/catalog', controller.catalog);
+router.patch('/pass-settings', requireAuth, requireRole('admin'), controller.updatePrice);
+router.post('/directories', requireAuth, requireRole('admin'), controller.createDirectory);
+router.post('/checkout', requireAuth, requireRole('student'), controller.checkout);
+router.post('/checkout/verify', requireAuth, requireRole('student'), controller.verifyPayment);
 router.get('/', controller.list);
 router.get('/admin', requireAuth, requireRole('admin'), controller.adminList);
 router.get('/admin/:id', requireAuth, requireRole('admin'), controller.adminDetail);

@@ -29,6 +29,7 @@ import { NoticesPage } from './pages/NoticesPage';
 import { NoticeDetail } from './pages/NoticeDetail';
 import { Profile } from './pages/Profile';
 import { NotificationsPage } from './pages/NotificationsPage';
+import { SavedQuestions } from './pages/SavedQuestions';
 
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminCourses } from './pages/admin/AdminCourses';
@@ -36,6 +37,7 @@ import { AdminCourseForm } from './pages/admin/AdminCourseForm';
 import { AdminTestSeries } from './pages/admin/AdminTestSeries';
 import { AdminTestSeriesForm } from './pages/admin/AdminTestSeriesForm';
 import { AdminTestSeriesDetail } from './pages/admin/AdminTestSeriesDetail';
+import { AdminQuestionReports } from './pages/admin/AdminQuestionReports';
 import { AdminTestBuilder } from './pages/admin/AdminTestBuilder';
 import { AdminNotes } from './pages/admin/AdminNotes';
 import { AdminNotesForm } from './pages/admin/AdminNotesForm';
@@ -68,14 +70,17 @@ export function App() {
               <Route path="/test-series/:seriesId/tests/:testId/solutions" element={<Solutions />} />
               <Route path="/notes" element={<Notes />} />
               <Route path="/current-affairs" element={<CurrentAffairs />} />
+              <Route path="/current-affairs/:entryId/solutions" element={<Solutions source="current-affairs" />} />
               <Route path="/current-affairs/:entryId/test" element={<CurrentAffairsTest />} />
               <Route path="/previous-papers" element={<PreviousPapers />} />
+              <Route path="/previous-papers/:paperId/solutions" element={<Solutions source="previous-paper" />} />
               <Route path="/previous-papers/:paperId/test" element={<PreviousPaperTest />} />
               <Route path="/syllabus" element={<SyllabusPage />} />
               <Route path="/notices" element={<NoticesPage />} />
               <Route path="/notices/:noticeId" element={<NoticeDetail />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/saved-questions" element={<SavedQuestions />} />
             </Route>
 
             <Route path="/login" element={<Login />} />
@@ -94,6 +99,8 @@ export function App() {
               <Route path="test-series/:seriesId/edit" element={<AdminTestSeriesForm />} />
               <Route path="test-series/:seriesId" element={<AdminTestSeriesDetail />} />
               <Route path="test-series/:seriesId/tests/new" element={<AdminTestBuilder />} />
+              <Route path="test-series/:seriesId/tests/:testId/edit" element={<AdminTestBuilder />} />
+              <Route path="question-reports" element={<AdminQuestionReports />} />
               <Route path="notes" element={<AdminNotes />} />
               <Route path="notes/new" element={<AdminNotesForm />} />
               <Route path="notes/:noteId/edit" element={<AdminNotesForm />} />

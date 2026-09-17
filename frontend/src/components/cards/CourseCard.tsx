@@ -9,7 +9,7 @@ export function CourseCard({ course }: {course: Course;}) {
   const free = course.type === 'free';
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white transition-shadow duration-200 ease-smooth hover:shadow-soft">
-      <div className="relative aspect-[16/9] overflow-hidden bg-canvas">
+      <div className="relative h-36 sm:h-40 overflow-hidden bg-canvas">
         <CourseThumbnail src={course.thumbnail} alt={course.title} className="h-full w-full object-cover transition-transform duration-300 ease-smooth group-hover:scale-[1.03]" />
         
         <span className="absolute left-3 top-3">
@@ -17,7 +17,7 @@ export function CourseCard({ course }: {course: Course;}) {
         </span>
       </div>
 
-      <div className="flex flex-1 flex-col p-4 sm:p-5">
+      <div className="flex flex-1 flex-col p-4">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-600">{course.exam}</p>
         <h3 className="mt-1.5 text-[15px] font-semibold leading-snug text-ink">
           <Link to={`/courses/${course.id}`} className="hover:text-brand-700">
@@ -52,7 +52,7 @@ export function CourseCard({ course }: {course: Course;}) {
           </div>
         }
 
-        <div className="mt-auto flex items-center justify-between gap-3 pt-5">
+        <div className="mt-auto flex items-center justify-between gap-3 pt-4">
           <span className="text-sm font-semibold text-ink">
             {free ? 'Free access' : `₹${course.price?.toLocaleString('en-IN')}`}
           </span>

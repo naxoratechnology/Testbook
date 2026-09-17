@@ -1,0 +1,10 @@
+const router = require('express').Router();
+const controller = require('./questionReview.controller');
+const { requireAuth, requireRole } = require('../auth/auth.middleware');
+router.use(requireAuth);
+router.get('/attempts', controller.attempts);
+router.get('/solution', controller.solution);
+router.post('/reports', controller.report);
+router.get('/reports', requireRole('admin'), controller.reports);
+router.patch('/reports/:id', requireRole('admin'), controller.updateReportStatus);
+module.exports = router;

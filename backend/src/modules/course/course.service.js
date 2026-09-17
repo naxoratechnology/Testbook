@@ -3,6 +3,7 @@ const Enrollment = require('./course.enrollment.model');
 const { uploadLesson } = require('./course.upload');
 const { destroy } = require('../../config/cloudinary');
 const notifications = require('../notification/notification.service');
+const { youtubeEmbedUrl } = require('./course.youtube');
 const defaultThumbnail = '/course-placeholder.svg';
 
 function publicCourse(course, unlocked = false) {
@@ -44,8 +45,14 @@ async function update(id, data) {
   return course;
 }
 async function remove(id) {
-  const result = await Course.findByIdAndDelete(id);
+  const result = await Course.findById(id).select('+thumbnailPublicId');
   if (!result) throw Object.assign(new Error('Course not found.'), { statusCode: 404 });
+  for (const lecture of result.lectures) {
+    if (lecture.publicId) await destroy(lecture.publicId, lecture.resourceType);
+    if (lecture.pdfPublicId) await destroy(lecture.pdfPublicId, lecture.pdfResourceType || 'raw');
+  }
+  if (result.thumbnailPublicId) await destroy(result.thumbnailPublicId, 'image');
+  await result.deleteOne();
 }
 async function addLesson(courseId, sectionId, file, data) {
   const course = await Course.findById(courseId);
@@ -62,11 +69,13 @@ async function addLecture(courseId, files, data) {
   if (!course) throw Object.assign(new Error('Course not found.'), { statusCode: 404 });
   const video = files.video && files.video[0];
   const pdf = files.pdf && files.pdf[0];
-  if (!video) throw Object.assign(new Error('A lecture video is required.'), { statusCode: 400 });
-  const media = await uploadLesson(video, 'video', courseId, 'lectures');
+  const youtubeUrl = String(data.youtubeUrl || '').trim();
+  if (Boolean(video) === Boolean(youtubeUrl)) throw Object.assign(new Error('Provide either one uploaded video or a YouTube URL, not both.'), { statusCode: 400 });
+  if (!String(data.title || '').trim()) throw Object.assign(new Error('Lecture name is required.'), { statusCode: 400 });
+  const media = youtubeUrl ? { url: youtubeEmbedUrl(youtubeUrl), publicId: '', resourceType: 'youtube', duration: '' } : await uploadLesson(video, 'video', courseId, 'lectures');
   let notes = {};
   if (pdf) notes = await uploadLesson(pdf, 'pdf', courseId, 'lectures');
-  course.lectures.push({ title: data.title, description: data.description || '', kind: 'video', url: media.url, publicId: media.publicId, resourceType: media.resourceType, duration: data.duration || media.duration, isPreview: data.isPreview === 'true', pdfUrl: notes.url || '', pdfPublicId: notes.publicId || '', pdfResourceType: notes.resourceType || 'raw' });
+  course.lectures.push({ title: data.title, description: data.description || '', kind: 'video', videoSource: youtubeUrl ? 'youtube' : 'upload', url: media.url, publicId: media.publicId, resourceType: media.resourceType, duration: data.duration || media.duration, isPreview: data.isPreview === 'true', pdfUrl: notes.url || '', pdfPublicId: notes.publicId || '', pdfResourceType: notes.resourceType || 'raw' });
   await course.save();
   return course;
 }
@@ -75,7 +84,8 @@ async function removeLesson(courseId, _sectionId, lessonId) {
   if (!course) throw Object.assign(new Error('Course not found.'), { statusCode: 404 });
   const lesson = course.lectures.id(lessonId);
   if (!lesson) throw Object.assign(new Error('Lesson not found.'), { statusCode: 404 });
-  await destroy(lesson.publicId, lesson.resourceType);
+  if (lesson.publicId) await destroy(lesson.publicId, lesson.resourceType);
+  if (lesson.pdfPublicId) await destroy(lesson.pdfPublicId, lesson.pdfResourceType || 'raw');
   lesson.deleteOne();
   await course.save();
   return course;

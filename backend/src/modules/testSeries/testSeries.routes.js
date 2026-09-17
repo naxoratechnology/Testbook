@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { thumbnailUpload } = require('../../utils/thumbnailUpload');
 const controller = require('./testSeries.controller');
 const { requireAuth, requireRole, optionalAuth } = require('../auth/auth.middleware');
 router.get('/', optionalAuth, controller.list);
@@ -7,10 +8,14 @@ router.get('/admin/:id', requireAuth, requireRole('admin'), controller.adminDeta
 router.get('/:id', optionalAuth, controller.detail);
 router.post('/:id/checkout', requireAuth, requireRole('student'), controller.checkout);
 router.post('/:id/checkout/verify', requireAuth, requireRole('student'), controller.verifyPayment);
+router.delete('/:id/thumbnail', requireAuth, requireRole('admin'), controller.removeThumbnail);
+router.post('/:id/thumbnail', requireAuth, requireRole('admin'), thumbnailUpload, controller.uploadThumbnail);
 router.post('/', requireAuth, requireRole('admin'), controller.create);
 router.patch('/:id', requireAuth, requireRole('admin'), controller.update);
 router.delete('/:id', requireAuth, requireRole('admin'), controller.remove);
 router.post('/:id/tests', requireAuth, requireRole('admin'), controller.addTest);
+router.patch('/:seriesId/tests/:testId', requireAuth, requireRole('admin'), controller.updateTest);
+router.delete('/:seriesId/tests/:testId', requireAuth, requireRole('admin'), controller.removeTest);
 router.post('/:id/purchase', requireAuth, requireRole('student'), controller.purchase);
 router.post('/:seriesId/tests/:testId/attempts', requireAuth, requireRole('student'), controller.attempt);
 router.get('/:id/results', requireAuth, requireRole('student'), controller.results);

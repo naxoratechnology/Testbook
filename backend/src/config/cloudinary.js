@@ -32,7 +32,7 @@ function uploadBuffer(buffer, options = {}) {
 
 async function destroy(publicId, resourceType = 'video') {
   ensureConfigured();
-  return cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+  return cloudinary.uploader.destroy(publicId, { resource_type: resourceType, invalidate: true });
 }
 
 module.exports = { uploadBuffer, destroy };

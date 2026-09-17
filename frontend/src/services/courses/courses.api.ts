@@ -6,7 +6,7 @@ export type CourseAccess = 'free' | 'paid';
 
 export interface CourseLecture {
   _id: string; title: string; description: string; url: string;
-  duration?: string; isPreview: boolean; pdfUrl?: string;
+  videoSource?: 'upload' | 'youtube'; duration?: string; isPreview: boolean; pdfUrl?: string;
 }
 export interface AdminCourse {
   _id: string; title: string; description: string; exam: string; category: string;
@@ -19,7 +19,7 @@ export interface CoursePayload {
   instructor: string; thumbnail: string; access: CourseAccess; price: number;
   status: CourseStatus; lectures?: CourseLecture[];
 }
-export interface LecturePayload { title: string; description: string; video: File; pdf?: File | null }
+export interface LecturePayload { title: string; description: string; video?: File | null; youtubeUrl?: string; pdf?: File | null }
 
 export const courseSchema = yup.object({
   title: yup.string().trim().required('Course name is required.'),
@@ -39,6 +39,8 @@ export const coursesApi = axios.create({
 });
 
 export const coursesApiService = {
+  removeThumbnail: (id: string) => coursesApi.delete(`/courses/${id}/thumbnail`),
+  uploadThumbnail: (id: string, file: File) => { const data = new FormData(); data.append('thumbnail', file); return coursesApi.post(`/courses/${id}/thumbnail`, data); },
   listPublic: (params?: { search?: string; exam?: string; category?: string; access?: string }) => coursesApi.get('/courses', { params }),
   getPublic: (id: string) => coursesApi.get(`/courses/${id}`),
   checkout: (id: string) => coursesApi.post(`/courses/${id}/checkout`),
@@ -51,7 +53,9 @@ export const coursesApiService = {
   addLecture: (courseId: string, payload: LecturePayload) => {
     const data = new FormData();
     data.append('title', payload.title); data.append('description', payload.description);
-    data.append('video', payload.video, payload.video.name);
+    if (Boolean(payload.video) === Boolean(payload.youtubeUrl?.trim())) throw new Error('Provide an uploaded video or a YouTube URL, not both.');
+    if (payload.video) data.append('video', payload.video, payload.video.name);
+    if (payload.youtubeUrl?.trim()) data.append('youtubeUrl', payload.youtubeUrl.trim());
     if (payload.pdf) data.append('pdf', payload.pdf, payload.pdf.name);
     return coursesApi.post(`/courses/${courseId}/lectures`, data);
   },

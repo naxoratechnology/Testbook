@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { BellIcon, ChevronDownIcon, LogOutIcon, MegaphoneIcon, MenuIcon, SearchIcon, UserIcon, XIcon } from 'lucide-react';
+import { BellIcon, BookmarkIcon, ChevronDownIcon, LogOutIcon, MegaphoneIcon, MenuIcon, SearchIcon, UserIcon, XIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useViewer } from '../../contexts/ViewerContext';
 import { btn } from '../ui/Primitives';
@@ -35,7 +35,7 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 px-3 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-3 lg:px-8">
+      <div className="mx-auto flex h-16 w-full max-w-none items-center gap-2 px-3 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-3 lg:px-6">
         <Logo />
 
         <nav aria-label="Main" className="hidden items-center justify-center gap-0.5 lg:flex">
@@ -91,6 +91,12 @@ export function Navbar() {
                   className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-ink-soft hover:bg-canvas hover:text-ink">
                   
                       <UserIcon className="h-4 w-4" /> Profile
+                    </Link>
+                    <Link
+                  to="/saved-questions"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-ink-soft hover:bg-canvas hover:text-ink">
+                      <BookmarkIcon className="h-4 w-4" /> Saved Questions
                     </Link>
                     <button
                   type="button"
