@@ -5,5 +5,6 @@ module.exports = {
   solution: run(async (req, res) => res.json({ success: true, data: { result: await service.solution(req.auth.sub, req.query, req.auth.role) } })),
   report: run(async (req, res) => res.status(201).json({ success: true, message: 'Question reported successfully.', data: { report: await service.report(req.auth.sub, req.body, req.auth.role) } })),
   reports: run(async (_req, res) => res.json({ success: true, data: { reports: await service.reports() } })),
+  myReports: run(async (req, res) => res.json({ success: true, data: { reports: await service.myReports(req.auth.sub) } })),
   updateReportStatus: run(async (req, res) => res.json({ success: true, data: { report: await service.updateReportStatus(req.params.id, req.body.status) } })),
 };

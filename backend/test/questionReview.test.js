@@ -7,6 +7,23 @@ const Report = require('../src/modules/questionReview/questionReview.model');
 const service = require('../src/modules/questionReview/questionReview.service');
 const validation = require('../src/modules/questionReview/questionReview.validation');
 const user = '507f1f77bcf86cd799439010';
+test('user report history filters by owner and excludes user identity fields', async () => {
+  const original = Report.find;
+  const items = [{ _id: 'report', questionText: 'Question', status: 'pending' }];
+  Report.find = filter => {
+    assert.deepEqual(filter, { user });
+    return { sort: order => {
+      assert.deepEqual(order, { createdAt: -1 });
+      return { select: fields => {
+        assert.ok(fields.includes('questionText'));
+        assert.ok(!fields.split(' ').includes('user'));
+        return { lean: async () => items };
+      } };
+    } };
+  };
+  try { assert.deepEqual(await service.myReports(user), items); }
+  finally { Report.find = original; }
+});
 const ref = { source: 'test-series', sourceId: '507f1f77bcf86cd799439011', testId: '507f1f77bcf86cd799439012' };
 const questionId = '507f1f77bcf86cd799439013';
 const question = { _id: questionId, text: 'Question', options: ['A', 'B'], correctAnswer: 1, explanation: 'Explanation', marks: 2 };

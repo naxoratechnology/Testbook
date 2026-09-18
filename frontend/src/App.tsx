@@ -7,6 +7,7 @@ import { AdminLayout } from './components/layout/AdminLayout';
 import { PdfViewer } from './components/ui/PdfViewer';
 import { SearchDialog } from './components/ui/SearchDialog';
 
+import { About } from './pages/About';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
@@ -29,6 +30,7 @@ import { NoticesPage } from './pages/NoticesPage';
 import { NoticeDetail } from './pages/NoticeDetail';
 import { Profile } from './pages/Profile';
 import { NotificationsPage } from './pages/NotificationsPage';
+import { Miscellaneous } from './pages/Miscellaneous';
 import { SavedQuestions } from './pages/SavedQuestions';
 
 import { AdminDashboard } from './pages/admin/AdminDashboard';
@@ -81,6 +83,8 @@ export function App() {
               <Route path="/profile" element={<Profile />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/saved-questions" element={<SavedQuestions />} />
+              <Route path="/miscellaneous" element={<Miscellaneous />} />
+              <Route path="/about" element={<About />} />
             </Route>
 
             <Route path="/login" element={<Login />} />

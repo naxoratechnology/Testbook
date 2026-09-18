@@ -4,6 +4,7 @@ const { requireAuth, requireRole } = require('../auth/auth.middleware');
 router.use(requireAuth);
 router.get('/attempts', controller.attempts);
 router.get('/solution', controller.solution);
+router.get('/my-reports', controller.myReports);
 router.post('/reports', controller.report);
 router.get('/reports', requireRole('admin'), controller.reports);
 router.patch('/reports/:id', requireRole('admin'), controller.updateReportStatus);

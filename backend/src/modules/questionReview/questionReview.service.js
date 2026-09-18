@@ -51,7 +51,8 @@ async function report(userId, body, role) {
   return { _id: saved._id, status: saved.status };
 }
 async function reports() { return Report.find({}).sort({ createdAt: -1 }).limit(100).populate('user', 'name email').lean(); }
-module.exports = { attempts, solution, report, reports };
+async function myReports(userId) { return Report.find({ user: userId }).sort({ createdAt: -1 }).select('source sourceId testId questionId title questionText reason details status createdAt').lean(); }
+module.exports = { attempts, solution, report, reports, myReports };
 module.exports.updateReportStatus = async (id, status) => {
   validateId(id);
   if (!['pending', 'resolved'].includes(status)) throw Object.assign(new Error('Invalid report status.'), { statusCode: 400 });

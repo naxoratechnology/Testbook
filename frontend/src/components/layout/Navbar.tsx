@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { BellIcon, BookmarkIcon, ChevronDownIcon, LogOutIcon, MegaphoneIcon, MenuIcon, SearchIcon, UserIcon, XIcon } from 'lucide-react';
+import { BellIcon, ChevronDownIcon, LogOutIcon, MegaphoneIcon, MenuIcon, SearchIcon, UserIcon, XIcon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useViewer } from '../../contexts/ViewerContext';
 import { btn } from '../ui/Primitives';
@@ -14,7 +14,9 @@ const publicLinks = [
 { to: '/current-affairs', label: 'Current Affairs' },
 { to: '/notices', label: 'Notices' },
 { to: '/previous-papers', label: 'Previous Papers' },
-{ to: '/syllabus', label: 'Syllabus' }];
+{ to: '/syllabus', label: 'Syllabus' },
+{ to: '/miscellaneous', label: 'Miscellaneous' },
+{ to: '/about', label: 'About' }];
 
 
 const studentLinks = [{ to: '/dashboard', label: 'Dashboard' }, ...publicLinks.slice(1)];
@@ -91,12 +93,6 @@ export function Navbar() {
                   className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-ink-soft hover:bg-canvas hover:text-ink">
                   
                       <UserIcon className="h-4 w-4" /> Profile
-                    </Link>
-                    <Link
-                  to="/saved-questions"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm text-ink-soft hover:bg-canvas hover:text-ink">
-                      <BookmarkIcon className="h-4 w-4" /> Saved Questions
                     </Link>
                     <button
                   type="button"

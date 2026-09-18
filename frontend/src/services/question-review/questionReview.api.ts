@@ -7,7 +7,9 @@ export interface ReportPayload extends BookmarkReference { reason: 'wrong-answer
 export const reviewKey = (ref: ReviewReference) => `${ref.source}:${ref.sourceId}:${ref.testId || ''}`;
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL, withCredentials: true });
 export interface AdminQuestionReport extends ReportPayload { _id: string; title: string; questionText: string; user: { name: string; email: string } | null; status: 'pending' | 'resolved'; createdAt: string }
+export type UserQuestionReport = Omit<AdminQuestionReport, 'user'>;
 export const questionReviewApiService = {
+  myReports: () => api.get('/question-review/my-reports'),
   reports: () => api.get('/question-review/reports'),
   updateReportStatus: (id: string, status: 'pending' | 'resolved') => api.patch(`/question-review/reports/${id}`, { status }),
   attempts: (source: QuestionSource, sourceId?: string) => api.get('/question-review/attempts', { params: { source, sourceId } }),

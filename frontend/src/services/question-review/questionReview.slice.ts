@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { questionReviewApiService } from './questionReview.api';
-import type { AdminQuestionReport, AttemptSummary, ReportPayload, ReviewReference, ReviewResult } from './questionReview.api';
+import type { UserQuestionReport, AdminQuestionReport, AttemptSummary, ReportPayload, ReviewReference, ReviewResult } from './questionReview.api';
 import type { QuestionSource } from '../bookmarks/bookmarks.api';
 const message = (error: unknown) => axios.isAxiosError(error) ? error.response?.data?.message || 'Review request failed.' : error instanceof Error ? error.message : 'Review request failed.';
 type State = { ownerId: string; attempts: Partial<Record<QuestionSource, AttemptSummary[]>> };
@@ -9,6 +9,7 @@ const initialState: State = { ownerId: '', attempts: {} };
 export const fetchReviewAttempts = createAsyncThunk<AttemptSummary[], { userId: string; source: QuestionSource }, { rejectValue: string }>('questionReview/attempts', async ({ source }, api) => { try { return (await questionReviewApiService.attempts(source)).data.data.attempts; } catch (error) { return api.rejectWithValue(message(error)); } });
 export const reportQuestion = createAsyncThunk<void, ReportPayload, { rejectValue: string }>('questionReview/report', async (payload, api) => { try { await questionReviewApiService.report(payload); } catch (error) { return api.rejectWithValue(message(error)); } });
 export const fetchReviewSolution = createAsyncThunk<ReviewResult, ReviewReference, { rejectValue: string }>('questionReview/solution', async (reference, api) => { try { return (await questionReviewApiService.solution(reference)).data.data.result; } catch (error) { return api.rejectWithValue(message(error)); } });
+export const fetchMyQuestionReports = createAsyncThunk<UserQuestionReport[], void, { rejectValue: string }>('questionReview/myReports', async (_, api) => { try { return (await questionReviewApiService.myReports()).data.data.reports; } catch (error) { return api.rejectWithValue(message(error)); } });
 export const fetchQuestionReports = createAsyncThunk<AdminQuestionReport[], void, { rejectValue: string }>('questionReview/reports', async (_, api) => { try { return (await questionReviewApiService.reports()).data.data.reports; } catch (error) { return api.rejectWithValue(message(error)); } });
 export const updateQuestionReportStatus = createAsyncThunk<AdminQuestionReport, { id: string; status: 'pending' | 'resolved' }, { rejectValue: string }>('questionReview/reportStatus', async ({ id, status }, api) => { try { return (await questionReviewApiService.updateReportStatus(id, status)).data.data.report; } catch (error) { return api.rejectWithValue(message(error)); } });
 const slice = createSlice({ name: 'questionReview', initialState, reducers: {}, extraReducers: (builder) => {
