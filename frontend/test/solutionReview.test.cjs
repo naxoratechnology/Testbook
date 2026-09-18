@@ -15,6 +15,15 @@ const result = { _id: 'attempt', title: 'Test', answers: { first: 0, second: 0, 
   { _id: 'third', text: 'Skipped question', options: ['A', 'B'], correctAnswer: 1, explanation: '' },
 ] };
 const render = (index) => renderToStaticMarkup(React.createElement(SolutionReview, { result, index, onJump() {}, name: 'Candidate', actions: null, navigation: null }));
+
+test('solution navigation is fixed at the bottom with content clearance and matching test typography', () => {
+  const html = render(0);
+  assert.match(html, /<footer aria-label="Solution navigation" class="fixed inset-x-0 bottom-0/);
+  assert.match(html, /pb-28/);
+  assert.match(html, /<h2 class="mt-5 whitespace-pre-wrap text-lg font-semibold leading-7 text-ink"/);
+  assert.match(html, />Previous<\/button>/);
+  assert.match(html, />Next<\/button>/);
+});
 test('first option is correctly classified as an answered question, not skipped', () => {
   assert.equal(answerStatus(result.questions[0], result.answers), 'correct');
   assert.equal(answerStatus(result.questions[1], result.answers), 'incorrect');

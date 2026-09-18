@@ -5,21 +5,21 @@ export type CourseStatus = 'draft' | 'published' | 'unpublished';
 export type CourseAccess = 'free' | 'paid';
 
 export interface CourseLecture {
-  _id: string; title: string; description: string; url: string;
+  _id: string; title: string; description: string; url: string; subject?: string;
   videoSource?: 'upload' | 'youtube'; duration?: string; isPreview: boolean; pdfUrl?: string;
 }
 export interface AdminCourse {
   _id: string; title: string; description: string; exam: string; category: string;
   instructor: string; thumbnail: string; access: CourseAccess; price: number;
-  status: CourseStatus; lectures: CourseLecture[]; createdAt: string;
+  subjects?: string[]; status: CourseStatus; lectures: CourseLecture[]; createdAt: string;
   enrolled?: boolean;
 }
 export interface CoursePayload {
   title: string; description: string; exam: string; category: string;
   instructor: string; thumbnail: string; access: CourseAccess; price: number;
-  status: CourseStatus; lectures?: CourseLecture[];
+  subjects?: string[]; status: CourseStatus; lectures?: CourseLecture[];
 }
-export interface LecturePayload { title: string; description: string; video?: File | null; youtubeUrl?: string; pdf?: File | null }
+export interface LecturePayload { subject?: string; title: string; description: string; video?: File | null; youtubeUrl?: string; pdf?: File | null }
 
 export const courseSchema = yup.object({
   title: yup.string().trim().required('Course name is required.'),
@@ -30,6 +30,7 @@ export const courseSchema = yup.object({
   thumbnail: yup.string().trim().url('Enter a valid thumbnail URL.').default(''),
   access: yup.mixed<CourseAccess>().oneOf(['free', 'paid']).required(),
   price: yup.number().min(0).when('access', { is: 'paid', then: (schema) => schema.moreThan(0, 'Price must be greater than zero.') }),
+  subjects: yup.array().of(yup.string().trim().required('Subject name is required.').max(120)).test('unique-subjects', 'Subject names must be unique.', (subjects) => !subjects || new Set(subjects.map((subject) => subject?.toLowerCase())).size === subjects.length),
   status: yup.mixed<CourseStatus>().oneOf(['draft', 'published', 'unpublished']).required(),
 });
 
@@ -52,6 +53,7 @@ export const coursesApiService = {
   remove: (id: string) => coursesApi.delete(`/courses/${id}`),
   addLecture: (courseId: string, payload: LecturePayload) => {
     const data = new FormData();
+    if (payload.subject) data.append('subject', payload.subject);
     data.append('title', payload.title); data.append('description', payload.description);
     if (Boolean(payload.video) === Boolean(payload.youtubeUrl?.trim())) throw new Error('Provide an uploaded video or a YouTube URL, not both.');
     if (payload.video) data.append('video', payload.video, payload.video.name);

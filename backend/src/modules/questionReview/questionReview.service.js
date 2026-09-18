@@ -26,7 +26,7 @@ async function solution(userId, query, role) {
   const filter = { user: userId, [config.field]: ref.sourceId };
   if (ref.testId) filter.test = ref.testId;
   const attempt = await config.Attempt.findOne(filter).sort({ submittedAt: -1, _id: -1 }).lean();
-  if (!attempt) throw Object.assign(new Error('Attempt this test before viewing its solution.'), { statusCode: 403 });
+  if (!attempt && ref.source !== 'previous-paper') throw Object.assign(new Error('Attempt this test before viewing its solution.'), { statusCode: 403 });
   const item = await config.Model.findOne({ _id: ref.sourceId, status: 'published' }).lean();
   if (!item) throw Object.assign(new Error('Test not found.'), { statusCode: 404 });
   if (ref.source === 'previous-paper') await require('../previousPaper/previousPaper.payment.service').requireAccess(userId, role);
@@ -37,7 +37,7 @@ async function solution(userId, query, role) {
     if (!test) throw Object.assign(new Error('Test not found.'), { statusCode: 404 });
     questions = test.questions; title = test.title;
   }
-  return { ...attempt, title, testTitle: title, questions, totalMarks: questions.reduce((sum, question) => sum + (question.marks ?? 1), 0) };
+  return { ...(attempt || { _id: String(item._id), answers: {} }), preview: !attempt, title, testTitle: title, questions, totalMarks: questions.reduce((sum, question) => sum + (question.marks ?? 1), 0) };
 }
 async function report(userId, body, role) {
   const value = validation.report(body);

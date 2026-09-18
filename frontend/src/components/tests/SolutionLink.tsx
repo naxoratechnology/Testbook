@@ -14,7 +14,7 @@ export function useAttemptedTests(source: ReviewReference['source']) {
   return user && ownerId === user.id ? attempts[source] || [] : [];
 }
 export function SolutionLink({ reference, attempted }: { reference: ReviewReference; attempted: boolean }) {
-  if (!attempted) return null;
+  if (!attempted && reference.source !== 'previous-paper') return null;
   const href = reference.source === 'test-series' ? `/test-series/${reference.sourceId}/tests/${reference.testId}/solutions` : reference.source === 'current-affairs' ? `/current-affairs/${reference.sourceId}/solutions` : `/previous-papers/${reference.sourceId}/solutions`;
   return <Link to={href} className={btn('secondary', 'sm')}>Solution</Link>;
 }

@@ -72,10 +72,12 @@ async function addLecture(courseId, files, data) {
   const youtubeUrl = String(data.youtubeUrl || '').trim();
   if (Boolean(video) === Boolean(youtubeUrl)) throw Object.assign(new Error('Provide either one uploaded video or a YouTube URL, not both.'), { statusCode: 400 });
   if (!String(data.title || '').trim()) throw Object.assign(new Error('Lecture name is required.'), { statusCode: 400 });
+  const subject = String(data.subject || '').trim();
+  if (subject && !(course.subjects || []).includes(subject)) throw Object.assign(new Error('Select a subject belonging to this course.'), { statusCode: 400 });
   const media = youtubeUrl ? { url: youtubeEmbedUrl(youtubeUrl), publicId: '', resourceType: 'youtube', duration: '' } : await uploadLesson(video, 'video', courseId, 'lectures');
   let notes = {};
   if (pdf) notes = await uploadLesson(pdf, 'pdf', courseId, 'lectures');
-  course.lectures.push({ title: data.title, description: data.description || '', kind: 'video', videoSource: youtubeUrl ? 'youtube' : 'upload', url: media.url, publicId: media.publicId, resourceType: media.resourceType, duration: data.duration || media.duration, isPreview: data.isPreview === 'true', pdfUrl: notes.url || '', pdfPublicId: notes.publicId || '', pdfResourceType: notes.resourceType || 'raw' });
+  course.lectures.push({ title: data.title, subject, description: data.description || '', kind: 'video', videoSource: youtubeUrl ? 'youtube' : 'upload', url: media.url, publicId: media.publicId, resourceType: media.resourceType, duration: data.duration || media.duration, isPreview: data.isPreview === 'true', pdfUrl: notes.url || '', pdfPublicId: notes.publicId || '', pdfResourceType: notes.resourceType || 'raw' });
   await course.save();
   return course;
 }

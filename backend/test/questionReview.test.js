@@ -55,3 +55,23 @@ test('report question must belong to the attempted test', async () => {
 test('prototype keys are not accepted as sources', async () => {
   await assert.rejects(service.attempts(user, { source: '__proto__' }), { statusCode: 400 });
 });
+test('previous papers expose an answer-key preview before attempting without creating an attempt', async () => {
+  const Paper = require('../src/modules/previousPaper/previousPaper.model');
+  const PaperAttempt = require('../src/modules/previousPaper/previousPaper.attempt.model');
+  const pass = require('../src/modules/previousPaper/previousPaper.payment.service');
+  let allowed = true;
+  pass.requireAccess = async () => { if (!allowed) throw Object.assign(new Error('Pass required'), { statusCode: 403 }); };
+  PaperAttempt.findOne = (filter) => { assert.deepEqual(filter, { user, paper: ref.sourceId }); return { sort: () => ({ lean: async () => null }) }; };
+  Paper.findOne = () => ({ lean: async () => ({ _id: ref.sourceId, title: 'Previous paper', questions: [question] }) });
+  const result = await service.solution(user, { source: 'previous-paper', sourceId: ref.sourceId }, 'student');
+  assert.equal(result.preview, true); assert.deepEqual(result.answers, {}); assert.equal(result.questions[0].correctAnswer, 1);
+  allowed = false;
+  await assert.rejects(service.solution(user, { source: 'previous-paper', sourceId: ref.sourceId }, 'student'), { statusCode: 403 });
+});
+test('previous-paper solutions after attempting preserve the user answers and latest result', async () => {
+  const PaperAttempt = require('../src/modules/previousPaper/previousPaper.attempt.model');
+  require('../src/modules/previousPaper/previousPaper.payment.service').requireAccess = async () => {};
+  PaperAttempt.findOne = () => ({ sort: () => ({ lean: async () => ({ _id: 'attempt', answers: { [questionId]: 0 } }) }) });
+  const result = await service.solution(user, { source: 'previous-paper', sourceId: ref.sourceId }, 'student');
+  assert.equal(result.preview, false); assert.equal(result._id, 'attempt'); assert.equal(result.answers[questionId], 0);
+});

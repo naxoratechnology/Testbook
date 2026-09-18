@@ -27,14 +27,26 @@ export function Solutions({ source = 'test-series' }: { source?: QuestionSource 
   }, [dispatch, user?.id, source, sourceId, testId, key]);
   const back = source === 'test-series' ? `/test-series/${seriesId}` : source === 'current-affairs' ? '/current-affairs' : '/previous-papers';
   const result = loaded?.owner === user?.id && loaded?.key === key ? loaded.result : null;
-  if (!user) return <PageShell title="Solutions" subtitle="Log in to view your attempted test solutions."><Link to={`/login?redirect=${encodeURIComponent(window.location.pathname)}`} className={btn('primary', 'md')}>Login</Link></PageShell>;
+  useEffect(() => {
+    if (!result) return;
+    const original = document.body.style.overflow; document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = original; };
+  }, [Boolean(result)]);
+  if (!user) return <PageShell title="Solutions" subtitle={source === 'previous-paper' ? 'Log in to view paper answers and explanations.' : 'Log in to view your attempted test solutions.'}><Link to={`/login?redirect=${encodeURIComponent(window.location.pathname)}`} className={btn('primary', 'md')}>Login</Link></PageShell>;
   if (!result) return <PageShell title="Solutions"><p role={error ? 'alert' : undefined} className={error ? 'text-sm text-red-600' : 'text-sm text-ink-muted'}>{error || 'Loading solutions...'}</p>{error && <Link to={back} className={btn('secondary', 'md', 'mt-4')}>Back to Tests</Link>}</PageShell>;
   const question = result.questions[index];
   if (!question) return <PageShell title="Solutions"><Link to={back} className={btn('secondary', 'md')}>Back to Tests</Link></PageShell>;
   const attemptPath = source === 'test-series' ? `/test-series/${seriesId}/tests/${testId}` : source === 'current-affairs' ? `/current-affairs/${entryId}/test` : `/previous-papers/${paperId}/test`;
   const hasResult = source === 'test-series' && currentAttempt?.series === seriesId && currentAttempt?.test === testId;
   const reference = { source, sourceId, ...(source === 'test-series' ? { testId } : {}), questionId: question._id };
-  return <PageShell title={result.title} subtitle="Review your answers and explanations." actions={<div className="flex flex-wrap gap-2"><Link to={back} className={btn('secondary', 'md')}>Back to Tests</Link><Link to={`${attemptPath}?reattempt=1`} className={btn('primary', 'md')}>Reattempt Test</Link></div>}>
+  return <div className="fixed inset-0 z-50 h-[100dvh] w-full overflow-y-auto bg-canvas text-ink">
+    <header className="sticky top-0 z-20 flex min-h-16 flex-wrap items-center gap-3 border-b border-line bg-white px-4 py-3 sm:px-6">
+      <Link to={back} className={btn('danger', 'sm', 'shrink-0 font-semibold')}>Back to Tests</Link>
+      <h1 className="order-last w-full min-w-0 text-sm font-semibold sm:order-none sm:w-auto sm:flex-1 sm:text-base">{result.title}</h1>
+      <Link to={`${attemptPath}?reattempt=1`} className={btn('primary', 'sm', 'ml-auto shrink-0')}>{result.preview ? 'Attempt Test' : 'Reattempt Test'}</Link>
+    </header>
+    <main className="w-full p-4 sm:p-6"><p className="mb-4 text-sm text-ink-muted">{result.preview ? 'Read correct answers and explanations before attempting the paper.' : 'Review your answers and explanations.'}</p>
     <SolutionReview key={result._id} result={result} index={index} onJump={setIndex} name={user.name} actions={<><BookmarkButton key={question._id} reference={reference} /><ReportQuestionButton key={question._id} reference={reference} /></>} navigation={<Link to={hasResult ? `/test-series/${seriesId}/tests/${testId}/result` : back} className={btn('ghost', 'sm')}>{hasResult ? 'Result' : 'Back to Tests'}</Link>} />
-  </PageShell>;
+    </main>
+  </div>;
 }

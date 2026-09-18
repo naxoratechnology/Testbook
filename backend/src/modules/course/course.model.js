@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const lessonSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true, maxlength: 160 },
+  subject: { type: String, trim: true, maxlength: 120, default: '' },
   description: { type: String, trim: true, maxlength: 500, default: '' },
   kind: { type: String, enum: ['video', 'pdf'], required: true },
   videoSource: { type: String, enum: ['upload', 'youtube'], default: 'upload' },
@@ -25,6 +26,7 @@ const courseSchema = new mongoose.Schema({
   thumbnailPublicId: { type: String, default: '', select: false },
   access: { type: String, enum: ['free', 'paid'], required: true, index: true },
   price: { type: Number, min: 0, default: 0 },
+  subjects: { type: [{ type: String, trim: true, maxlength: 120 }], default: [] },
   lectures: { type: [lessonSchema], default: [] },
   status: { type: String, enum: ['draft', 'published', 'unpublished'], default: 'draft', index: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

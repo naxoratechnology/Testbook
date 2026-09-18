@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { BookmarkReference, QuestionSource } from '../bookmarks/bookmarks.api';
 export type ReviewReference = Omit<BookmarkReference, 'questionId'>;
 export interface AttemptSummary { _id: string; source: QuestionSource; sourceId: string; testId: string | null; submittedAt: string }
-export interface ReviewResult { _id: string; title: string; answers: Record<string, number | null>; questions: { _id: string; text: string; options: string[]; correctAnswer: number; explanation: string; marks?: number; negativeMarks?: number }[] }
+export interface ReviewResult { preview?: boolean; _id: string; title: string; answers: Record<string, number | null>; questions: { _id: string; text: string; options: string[]; correctAnswer: number; explanation: string; marks?: number; negativeMarks?: number }[] }
 export interface ReportPayload extends BookmarkReference { reason: 'wrong-answer' | 'question-error' | 'translation' | 'other'; details: string }
 export const reviewKey = (ref: ReviewReference) => `${ref.source}:${ref.sourceId}:${ref.testId || ''}`;
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL, withCredentials: true });
