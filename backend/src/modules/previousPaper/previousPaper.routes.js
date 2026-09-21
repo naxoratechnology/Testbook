@@ -14,6 +14,6 @@ router.get('/admin/:id', requireAuth, requireRole('admin'), controller.adminDeta
 router.get('/:id', controller.detail);
 router.post('/:id/attempts', requireAuth, requireRole('student'), controller.attempt);
 router.post('/', requireAuth, requireRole('admin'), upload.single('file'), controller.create);
-router.patch('/:id', requireAuth, requireRole('admin'), controller.update);
+router.patch('/:id', requireAuth, requireRole('admin'), upload.single('file'), controller.update);
 router.delete('/:id', requireAuth, requireRole('admin'), controller.remove);
 module.exports = router;

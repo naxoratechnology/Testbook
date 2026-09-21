@@ -32,9 +32,9 @@ async function solution(userId, query, role) {
   if (ref.source === 'previous-paper') await require('../previousPaper/previousPaper.payment.service').requireAccess(userId, role);
   let questions = item.questions; let title = item.title;
   if (ref.source === 'test-series') {
-    if (item.access === 'paid' && role !== 'admin' && !await Purchase.exists({ user: userId, series: ref.sourceId, status: 'active' })) throw Object.assign(new Error('Purchase this series to view its solutions.'), { statusCode: 403 });
     const test = item.tests.find((entry) => String(entry._id) === ref.testId && entry.status === 'published');
     if (!test) throw Object.assign(new Error('Test not found.'), { statusCode: 404 });
+    if (item.access === 'paid' && !test.isPreview && role !== 'admin' && !await Purchase.exists({ user: userId, series: ref.sourceId, status: 'active' })) throw Object.assign(new Error('Purchase this series to view its solutions.'), { statusCode: 403 });
     questions = test.questions; title = test.title;
   }
   return { ...(attempt || { _id: String(item._id), answers: {} }), preview: !attempt, title, testTitle: title, questions, totalMarks: questions.reduce((sum, question) => sum + (question.marks ?? 1), 0) };

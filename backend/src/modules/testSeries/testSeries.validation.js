@@ -1,14 +1,16 @@
 function series(body = {}) {
-  const value = { title: String(body.title || '').trim(), description: String(body.description || '').trim(), exam: String(body.exam || '').trim(), kind: body.kind || 'full', access: body.access === 'paid' ? 'paid' : 'free', price: Number(body.price || 0), difficulty: body.difficulty || 'Moderate', languages: String(body.languages || 'English'), status: body.status || 'draft' };
+  const value = { title: String(body.title || '').trim(), description: String(body.description || '').trim(), exam: String(body.exam || '').trim(), kind: body.kind || 'full', access: body.access === 'paid' ? 'paid' : 'free', price: Number(body.price || 0), difficulty: body.difficulty || 'Moderate', languages: String(body.languages || 'English'), subjects: Array.isArray(body.subjects) ? body.subjects.map(item => String(item).trim()) : [], status: body.status || 'draft' };
   const errors = {};
   ['title', 'description', 'exam'].forEach((key) => { if (!value[key]) errors[key] = key + ' is required.'; });
   if (value.access === 'paid' && value.price <= 0) errors.price = 'Paid series require a price.';
+  if (value.subjects.some(item => !item || item.length > 120) || new Set(value.subjects.map(item => item.toLowerCase())).size !== value.subjects.length) errors.subjects = 'Enter unique subject names of 1–120 characters.';
   return { value, errors };
 }
 function test(body = {}) {
-  const value = { title: String(body.title || '').trim(), duration: Number(body.duration || 0), questions: Array.isArray(body.questions) ? body.questions : [], status: body.status || 'draft' };
+  const value = { title: String(body.title || '').trim(), subject: String(body.subject || '').trim(), duration: Number(body.duration || 0), questions: Array.isArray(body.questions) ? body.questions : [], status: body.status || 'draft', isPreview: body.isPreview === true };
   const errors = {};
   if (!value.title) errors.title = 'Test title is required.';
+  if (value.subject.length > 120) errors.subject = 'Subject must be 120 characters or fewer.';
   if (!Number.isInteger(value.duration) || value.duration < 1) errors.duration = 'Duration must be a positive whole number.';
   if (!['draft', 'published', 'unpublished'].includes(value.status)) errors.status = 'Invalid test status.';
   if (!value.questions.length) errors.questions = 'Add at least one question.';

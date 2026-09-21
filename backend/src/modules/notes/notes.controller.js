@@ -8,4 +8,8 @@ const detail = run(async (req, res) => res.json({ success: true, data: { notes: 
 const adminDetail = run(async (req, res) => res.json({ success: true, data: { notes: await service.find(req.params.id, true) } }));
 const update = run(async (req, res) => { const { value, errors } = validation.validate(req.body); if (Object.keys(errors).length) return res.status(400).json({ success: false, message: 'Validation failed.', errors }); return res.json({ success: true, data: { notes: await service.update(req.params.id, value) } }); });
 const remove = run(async (req, res) => { await service.remove(req.params.id); return res.json({ success: true, message: 'Notes deleted successfully.' }); });
-module.exports = { create, list, adminList, detail, adminDetail, update, remove };
+const { saveThumbnail, removeThumbnail } = require('../../utils/thumbnailUpload');
+const Notes = require('./notes.model');
+const uploadThumbnail = run(async (req, res) => res.json({ success: true, data: { notes: await saveThumbnail(Notes, req.params.id, req.file, 'notes') } }));
+const deleteThumbnail = run(async (req, res) => res.json({ success: true, data: { notes: await removeThumbnail(Notes, req.params.id) } }));
+module.exports = { create, list, adminList, detail, adminDetail, update, remove, uploadThumbnail, removeThumbnail: deleteThumbnail };

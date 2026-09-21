@@ -74,6 +74,7 @@ async function addLecture(courseId, files, data) {
   if (!String(data.title || '').trim()) throw Object.assign(new Error('Lecture name is required.'), { statusCode: 400 });
   const subject = String(data.subject || '').trim();
   if (subject && !(course.subjects || []).includes(subject)) throw Object.assign(new Error('Select a subject belonging to this course.'), { statusCode: 400 });
+  if (data.isPreview === 'true' && course.lectures.filter((lecture) => lecture.isPreview).length >= 2) throw Object.assign(new Error('Choose no more than two free demo lectures.'), { statusCode: 400 });
   const media = youtubeUrl ? { url: youtubeEmbedUrl(youtubeUrl), publicId: '', resourceType: 'youtube', duration: '' } : await uploadLesson(video, 'video', courseId, 'lectures');
   let notes = {};
   if (pdf) notes = await uploadLesson(pdf, 'pdf', courseId, 'lectures');

@@ -15,9 +15,9 @@ async function save(userId, body, role) {
   let questions = item.questions;
   let title = item.title;
   if (ref.source === 'test-series') {
-    if (item.access === 'paid' && role !== 'admin' && !await Purchase.exists({ user: userId, series: ref.sourceId, status: 'active' })) throw Object.assign(new Error('Purchase this series before saving its questions.'), { statusCode: 403 });
     const test = item.tests.find((entry) => String(entry._id) === ref.testId && entry.status === 'published');
     if (!test) throw Object.assign(new Error('Test not found.'), { statusCode: 404 });
+    if (item.access === 'paid' && !test.isPreview && role !== 'admin' && !await Purchase.exists({ user: userId, series: ref.sourceId, status: 'active' })) throw Object.assign(new Error('Purchase this series before saving its questions.'), { statusCode: 403 });
     questions = test.questions; title = `${item.title} — ${test.title}`;
   }
   const question = (questions || []).find((entry) => String(entry._id) === ref.questionId);

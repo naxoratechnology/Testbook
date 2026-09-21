@@ -18,6 +18,7 @@ const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
 const notificationRoutes = require('./modules/notification/notification.routes');
 const bookmarkRoutes = require('./modules/bookmark/bookmark.routes');
 const questionReviewRoutes = require('./modules/questionReview/questionReview.routes');
+const bannerRoutes = require('./modules/banner/banner.routes');
 const env = require('./config/env');
 const app = express();
 app.set('trust proxy', 1);
@@ -109,6 +110,7 @@ app.use('/api/v1/dashboard', dashboardRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/bookmarks', bookmarkRoutes);
 app.use('/api/v1/question-review', questionReviewRoutes);
+app.use('/api/v1/banners', bannerRoutes);
 
 /*
 |--------------------------------------------------------------------------

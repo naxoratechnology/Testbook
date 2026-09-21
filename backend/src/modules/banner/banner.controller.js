@@ -1,0 +1,14 @@
+const service = require('./banner.service');
+const Banner = require('./banner.model');
+const { validate } = require('./banner.validation');
+const { saveThumbnail, removeThumbnail } = require('../../utils/thumbnailUpload');
+const run = (handler) => (req, res, next) => Promise.resolve(handler(req, res)).catch(next);
+const checked = (body) => { const result = validate(body); if (Object.keys(result.errors).length) throw Object.assign(new Error('Validation failed.'), { statusCode: 400, errors: result.errors }); return result.value; };
+const list = run(async (req, res) => res.json({ success: true, data: { banners: await service.list(false, req.query.placement) } }));
+const adminList = run(async (_req, res) => res.json({ success: true, data: { banners: await service.list(true) } }));
+const create = run(async (req, res) => res.status(201).json({ success: true, data: { banner: await service.create(checked(req.body), req.auth.sub) } }));
+const update = run(async (req, res) => res.json({ success: true, data: { banner: await service.update(req.params.id, checked(req.body)) } }));
+const remove = run(async (req, res) => { await service.remove(req.params.id); res.json({ success: true, message: 'Banner deleted.' }); });
+const uploadImage = run(async (req, res) => res.json({ success: true, data: { banner: await saveThumbnail(Banner, req.params.id, req.file, 'banners') } }));
+const removeImage = run(async (req, res) => res.json({ success: true, data: { banner: await removeThumbnail(Banner, req.params.id) } }));
+module.exports = { list, adminList, create, update, remove, uploadImage, removeImage };

@@ -22,6 +22,7 @@ function validateCourse(body = {}) {
   }
   ['title', 'description', 'exam', 'category', 'instructor'].forEach((key) => { if (!value[key]) errors[key] = key + ' is required.'; });
   if (value.access === 'paid' && (!Number.isFinite(value.price) || value.price <= 0)) errors.price = 'Paid courses require a price greater than zero.';
+  if (value.lectures.filter((lecture) => lecture.isPreview).length > 2) errors.lectures = 'Choose no more than two free demo lectures.';
   return { value, errors };
 }
 module.exports = { validateCourse };

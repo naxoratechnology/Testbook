@@ -11,9 +11,11 @@ const questionSchema = new mongoose.Schema({
 
 const testSchema = new mongoose.Schema({
   title: { type: String, required: true, trim: true },
+  subject: { type: String, trim: true, default: '' },
   duration: { type: Number, required: true, min: 1 },
   questions: { type: [questionSchema], default: [] },
   status: { type: String, enum: ['draft', 'published', 'unpublished'], default: 'draft' },
+  isPreview: { type: Boolean, default: false },
 }, { timestamps: true });
 
 const seriesSchema = new mongoose.Schema({
@@ -27,6 +29,7 @@ const seriesSchema = new mongoose.Schema({
   price: { type: Number, min: 0, default: 0 },
   difficulty: { type: String, enum: ['Easy', 'Moderate', 'Hard'], default: 'Moderate' },
   languages: { type: String, default: 'English' },
+  subjects: { type: [String], default: [] },
   tests: { type: [testSchema], default: [] },
   status: { type: String, enum: ['draft', 'published', 'unpublished'], default: 'draft', index: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },

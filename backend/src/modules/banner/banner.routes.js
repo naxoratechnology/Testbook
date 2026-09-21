@@ -1,0 +1,12 @@
+const router = require('express').Router();
+const controller = require('./banner.controller');
+const { requireAuth, requireRole } = require('../auth/auth.middleware');
+const { thumbnailUpload } = require('../../utils/thumbnailUpload');
+router.get('/', controller.list);
+router.get('/admin', requireAuth, requireRole('admin'), controller.adminList);
+router.post('/', requireAuth, requireRole('admin'), controller.create);
+router.patch('/:id', requireAuth, requireRole('admin'), controller.update);
+router.delete('/:id', requireAuth, requireRole('admin'), controller.remove);
+router.post('/:id/image', requireAuth, requireRole('admin'), thumbnailUpload, controller.uploadImage);
+router.delete('/:id/image', requireAuth, requireRole('admin'), controller.removeImage);
+module.exports = router;

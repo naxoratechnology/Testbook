@@ -17,19 +17,19 @@ async function list(query = {}, admin = false, userId = null) {
   if (admin) return items; const purchasedIds = userId ? await Purchase.find({ user: userId, status: 'active' }).distinct('series') : []; const access = new Set(purchasedIds.map(String)); return items.map((item) => publicSeries(item, access.has(String(item._id))));
 }
 async function find(id, admin = false, userId = null) { const item = await Series.findOne(admin ? { _id: id } : { _id: id, status: 'published' }).lean(); if (!item) throw Object.assign(new Error('Test series not found.'), { statusCode: 404 }); if (admin) return item; const purchased = Boolean(userId && await Purchase.exists({ user: userId, series: id, status: 'active' })); return publicSeries(item, purchased); }
-async function update(id, data) { const item = await Series.findByIdAndUpdate(id, data, { new: true, runValidators: true }); if (!item) throw Object.assign(new Error('Test series not found.'), { statusCode: 404 }); return item; }
+async function update(id, data) { const item = await Series.findById(id); if (!item) throw Object.assign(new Error('Test series not found.'), { statusCode: 404 }); const removed = (item.subjects || []).filter(subject => !data.subjects?.includes(subject)); if (removed.some(subject => item.tests.some(test => test.subject === subject))) throw Object.assign(new Error('Move tests out of a subject before removing it.'), { statusCode: 400 }); item.set(data); await item.save(); return item; }
 async function remove(id) {
   const item = await Series.findById(id).select('+thumbnailPublicId');
   if (!item) throw Object.assign(new Error('Test series not found.'), { statusCode: 404 });
   if (item.thumbnailPublicId) await destroy(item.thumbnailPublicId, 'image');
   await item.deleteOne();
 }
-async function addTest(seriesId, data) { const item = await Series.findById(seriesId); if (!item) throw Object.assign(new Error('Test series not found.'), { statusCode: 404 }); item.tests.push(data); await item.save(); return item; }
+async function addTest(seriesId, data) { const item = await Series.findById(seriesId); if (!item) throw Object.assign(new Error('Test series not found.'), { statusCode: 404 }); if (data.subject && !(item.subjects || []).includes(data.subject)) throw Object.assign(new Error('Choose a subject from this series.'), { statusCode: 400 }); if (data.isPreview && item.tests.filter((test) => test.isPreview).length >= 2) throw Object.assign(new Error('Choose no more than two free demo tests.'), { statusCode: 400 }); item.tests.push(data); await item.save(); return item; }
 async function purchase(userId, seriesId) { const item = await Series.findOne({ _id: seriesId, status: 'published' }); if (!item) throw Object.assign(new Error('Test series not found.'), { statusCode: 404 }); if (item.access === 'paid') throw Object.assign(new Error('Payment is required before purchasing this series.'), { statusCode: 402 }); return Purchase.findOneAndUpdate({ user: userId, series: seriesId }, { status: 'active' }, { upsert: true, new: true }); }
 async function attempt(userId, seriesId, testId, answers = {}) {
   const item = await Series.findOne({ _id: seriesId, status: 'published' }); if (!item) throw Object.assign(new Error('Test series not found.'), { statusCode: 404 });
   const test = item.tests.id(testId); if (!test || test.status !== 'published') throw Object.assign(new Error('Test not found.'), { statusCode: 404 });
-  if (item.access === 'paid' && !(await Purchase.exists({ user: userId, series: seriesId, status: 'active' }))) throw Object.assign(new Error('Purchase this series before attempting it.'), { statusCode: 403 });
+  if (item.access === 'paid' && !test.isPreview && !(await Purchase.exists({ user: userId, series: seriesId, status: 'active' }))) throw Object.assign(new Error('Purchase this series before attempting it.'), { statusCode: 403 });
   let score = 0; let correct = 0; let incorrect = 0; let unanswered = 0;
   test.questions.forEach((question) => { const answer = answers[question._id.toString()]; if (answer === undefined || answer === null) unanswered += 1; else if (Number(answer) === question.correctAnswer) { correct += 1; score += question.marks; } else { incorrect += 1; score -= question.negativeMarks; } });
   const total = test.questions.length; const result = await Attempt.create({ user: userId, series: seriesId, test: testId, answers, score, correct, incorrect, unanswered, accuracy: total ? Math.round((correct / total) * 100) : 0 });
@@ -41,6 +41,8 @@ async function updateTest(seriesId, testId, data) {
   if (!item) throw Object.assign(new Error('Test series not found.'), { statusCode: 404 });
   const test = item.tests.id(testId);
   if (!test) throw Object.assign(new Error('Test not found.'), { statusCode: 404 });
+  if (data.subject && !(item.subjects || []).includes(data.subject)) throw Object.assign(new Error('Choose a subject from this series.'), { statusCode: 400 });
+  if (data.isPreview && item.tests.filter((entry) => entry.isPreview && String(entry._id) !== String(testId)).length >= 2) throw Object.assign(new Error('Choose no more than two free demo tests.'), { statusCode: 400 });
   const existingIds = new Set(test.questions.map((question) => String(question._id)));
   if (data.questions.some((question) => question._id && !existingIds.has(String(question._id)))) throw Object.assign(new Error('A question does not belong to this test.'), { statusCode: 400 });
   test.set(data);
