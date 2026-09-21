@@ -7,7 +7,7 @@ const schema = new mongoose.Schema({
   testId: { type: mongoose.Schema.Types.ObjectId, default: null },
   questionId: { type: mongoose.Schema.Types.ObjectId, required: true },
   title: { type: String, required: true },
-  question: { text: { type: String, required: true }, options: { type: [String], required: true }, marks: { type: Number, default: 1 }, negativeMarks: { type: Number, default: 0 } },
+  question: { text: { type: String, required: true }, options: { type: [String], required: true }, correctAnswer: { type: Number, min: 0 }, explanation: { type: String, default: '' }, marks: { type: Number, default: 1 }, negativeMarks: { type: Number, default: 0 } },
 }, { timestamps: true, versionKey: false });
 schema.index({ user: 1, source: 1, sourceId: 1, testId: 1, questionId: 1 }, { unique: true });
 module.exports = mongoose.model('Bookmark', schema);

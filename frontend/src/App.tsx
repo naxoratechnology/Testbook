@@ -72,6 +72,7 @@ export function App() {
               <Route path="/test-series/:seriesId/tests/:testId/result" element={<TestResult />} />
               <Route path="/test-series/:seriesId/tests/:testId/solutions" element={<Solutions />} />
               <Route path="/notes" element={<Notes />} />
+              <Route path="/notes/:collectionName" element={<Notes />} />
               <Route path="/current-affairs" element={<CurrentAffairs />} />
               <Route path="/current-affairs/:entryId/solutions" element={<Solutions source="current-affairs" />} />
               <Route path="/current-affairs/:entryId/test" element={<CurrentAffairsTest />} />

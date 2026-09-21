@@ -31,3 +31,31 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+.rich-text p,
+.rich-text div,
+.rich-editor p,
+.rich-editor div {
+  margin: 0.35rem 0;
+}
+.rich-text ul,
+.rich-editor ul {
+  list-style: disc;
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+.rich-text ol,
+.rich-editor ol {
+  list-style: decimal;
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+.rich-text sup,
+.rich-editor sup {
+  vertical-align: super;
+  font-size: 0.72em;
+}
+.rich-text sub,
+.rich-editor sub {
+  vertical-align: sub;
+  font-size: 0.72em;
+}
