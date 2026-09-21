@@ -54,6 +54,7 @@ import { AdminPreviousPaperForm } from './pages/admin/AdminPreviousPaperForm';
 import { AdminStudents } from './pages/admin/AdminStudents';
 import { AdminStudentDetail } from './pages/admin/AdminStudentDetail';
 import { AdminSettings } from './pages/admin/AdminSettings';
+import { AdminBanners } from './pages/admin/AdminBanners';
 
 export function App() {
   return (
@@ -123,6 +124,7 @@ export function App() {
               <Route path="students" element={<AdminStudents />} />
               <Route path="students/:studentId" element={<AdminStudentDetail />} />
               <Route path="settings" element={<AdminSettings />} />
+              <Route path="banners" element={<AdminBanners />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -19,7 +19,7 @@ export interface CoursePayload {
   instructor: string; thumbnail: string; access: CourseAccess; price: number;
   subjects?: string[]; status: CourseStatus; lectures?: CourseLecture[];
 }
-export interface LecturePayload { subject?: string; title: string; description: string; video?: File | null; youtubeUrl?: string; pdf?: File | null }
+export interface LecturePayload { subject?: string; title: string; description: string; video?: File | null; youtubeUrl?: string; pdf?: File | null; isPreview?: boolean }
 
 export const courseSchema = yup.object({
   title: yup.string().trim().required('Course name is required.'),
@@ -55,6 +55,7 @@ export const coursesApiService = {
     const data = new FormData();
     if (payload.subject) data.append('subject', payload.subject);
     data.append('title', payload.title); data.append('description', payload.description);
+    data.append('isPreview', String(Boolean(payload.isPreview)));
     if (Boolean(payload.video) === Boolean(payload.youtubeUrl?.trim())) throw new Error('Provide an uploaded video or a YouTube URL, not both.');
     if (payload.video) data.append('video', payload.video, payload.video.name);
     if (payload.youtubeUrl?.trim()) data.append('youtubeUrl', payload.youtubeUrl.trim());

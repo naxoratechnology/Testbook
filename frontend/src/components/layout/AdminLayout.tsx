@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   FlagIcon,
+  ImagesIcon,
   MegaphoneIcon,
   BookOpenIcon,
   CalendarDaysIcon,
@@ -23,6 +24,7 @@ import { Avatar } from './Navbar';
 
 const items = [
 { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboardIcon },
+{ to: '/admin/banners', label: 'Banners', icon: ImagesIcon },
 { to: '/admin/courses', label: 'Courses', icon: BookOpenIcon },
 { to: '/admin/test-series', label: 'Test Series', icon: ListChecksIcon },
 { to: '/admin/question-reports', label: 'Reported Questions', icon: FlagIcon },

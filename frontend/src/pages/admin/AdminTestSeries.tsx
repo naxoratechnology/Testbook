@@ -17,7 +17,7 @@ export function AdminTestSeries() {
   useEffect(() => { dispatch(fetchAdminTestSeries()); }, [dispatch]);
   const published = useMemo(() => items.filter((item) => item.status === 'published').length, [items]);
   const questionCount = (series: AdminTestSeries) => series.tests.reduce((sum, test) => sum + test.questions.length, 0);
-  const toggle = async (series: AdminTestSeries) => { await dispatch(updateTestSeries({ id: series._id, payload: { title: series.title, description: series.description, exam: series.exam, kind: series.kind, access: series.access, price: series.price, difficulty: series.difficulty, languages: series.languages, status: series.status === 'published' ? 'unpublished' : 'published' } })); };
+  const toggle = async (series: AdminTestSeries) => { await dispatch(updateTestSeries({ id: series._id, payload: { title: series.title, description: series.description, exam: series.exam, kind: series.kind, access: series.access, price: series.price, difficulty: series.difficulty, languages: series.languages, subjects: series.subjects || [], status: series.status === 'published' ? 'unpublished' : 'published' } })); };
   const remove = async (id: string) => { if (window.confirm('Delete this test series and all its tests?')) await dispatch(deleteTestSeries(id)); };
 
   return <PageShell title="Test Series" subtitle="Create and organise mock tests for your students." width="max-w-[1400px]" actions={<Link to="/admin/test-series/new" className={btn('primary', 'md')}><PlusIcon className="h-4 w-4" /> Create test series</Link>}>
