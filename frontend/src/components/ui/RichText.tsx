@@ -1,5 +1,9 @@
 import { useEffect, useRef } from 'react';
 
+export const questionTextClass = 'text-base font-semibold leading-7 text-ink sm:text-lg';
+export const optionTextClass = 'text-base font-medium leading-7 sm:text-lg';
+export const explanationTextClass = 'text-base font-normal leading-7 sm:text-lg';
+
 const allowedTags = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'SUP', 'SUB', 'P', 'DIV', 'BR', 'UL', 'OL', 'LI']);
 
 export function sanitizeRichText(value: string) {

@@ -9,6 +9,7 @@ import { bannersApi, type Banner, type BannerPayload } from '../../services/bann
 const empty: BannerPayload = {
   title: '',
   subtitle: '',
+  showText: false,
   buttonLabel: '',
   buttonUrl: '/courses',
   placement: 'both',
@@ -50,6 +51,7 @@ export function AdminBanners() {
     setForm(item ? {
       title: item.title,
       subtitle: item.subtitle,
+      showText: Boolean(item.showText),
       buttonLabel: item.buttonLabel,
       buttonUrl: item.buttonUrl,
       placement: item.placement,
@@ -136,7 +138,7 @@ export function AdminBanners() {
                 </Td>
                 <Td>
                   <p className="font-medium text-ink">{item.title}</p>
-                  <p className="mt-0.5 max-w-sm truncate text-xs text-ink-muted">{item.subtitle || 'No subtitle'}</p>
+                  <p className="mt-0.5 max-w-sm truncate text-xs text-ink-muted">{item.showText ? item.subtitle || 'Text overlay enabled' : 'Image only'}</p>
                 </Td>
                 <Td><Badge tone="brand">{item.placement === 'both' ? 'Home + Dashboard' : item.placement}</Badge></Td>
                 <Td>{item.order}</Td>
@@ -161,11 +163,12 @@ export function AdminBanners() {
             <Field label="Banner image" hint={editing ? 'Choose a file only if you want to replace the current image.' : 'Wide JPG, PNG or WebP · up to 5 MB'}>
               <Input required={!editing} type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setImage(event.target.files?.[0] || null)} />
             </Field>
-            <Field label="Title"><Input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></Field>
-            <Field label="Subtitle"><Textarea rows={3} value={form.subtitle} onChange={(event) => setForm({ ...form, subtitle: event.target.value })} /></Field>
+            <Field label="Banner name" hint="Used to identify the banner in admin. It becomes the headline only if you enable text below."><Input required value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} /></Field>
+            <label className="flex items-start gap-3 rounded-xl border border-line bg-canvas/60 p-3 text-sm text-ink"><input type="checkbox" checked={Boolean(form.showText)} onChange={(event) => setForm({ ...form, showText: event.target.checked })} className="mt-0.5 h-4 w-4 accent-brand-600" /><span><span className="block font-medium">Show text on this banner (optional)</span><span className="mt-1 block text-xs text-ink-muted">Leave off for image-only banners that already contain their own text.</span></span></label>
+            {form.showText && <Field label="Short supporting text (optional)"><Textarea rows={2} maxLength={300} value={form.subtitle} onChange={(event) => setForm({ ...form, subtitle: event.target.value })} /></Field>}
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Button label"><Input value={form.buttonLabel} onChange={(event) => setForm({ ...form, buttonLabel: event.target.value })} /></Field>
-              <Field label="Button link"><Input value={form.buttonUrl} onChange={(event) => setForm({ ...form, buttonUrl: event.target.value })} /></Field>
+              {form.showText && <><Field label="Button label (optional)"><Input value={form.buttonLabel} onChange={(event) => setForm({ ...form, buttonLabel: event.target.value })} /></Field>
+              <Field label="Button link (optional)"><Input value={form.buttonUrl} onChange={(event) => setForm({ ...form, buttonUrl: event.target.value })} /></Field></>}
               <Field label="Show on">
                 <Select value={form.placement} onChange={(event) => setForm({ ...form, placement: event.target.value as BannerPayload['placement'] })}>
                   <option value="both">Home + Dashboard</option>

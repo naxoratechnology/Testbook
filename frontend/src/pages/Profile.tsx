@@ -4,6 +4,7 @@ import { BookmarkIcon, BellIcon, LockIcon, LogOutIcon, MailIcon, PhoneIcon, Targ
 import { useAuth } from '../contexts/AuthContext';
 import { PageShell, Panel } from '../components/ui/PageShell';
 import { Badge, Button, Field, Input, btn } from '../components/ui/Primitives';
+import { PasswordInput } from '../components/ui/PasswordInput';
 import { Avatar } from '../components/layout/Navbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { changePassword } from '../services/auth/auth.slice';
@@ -84,13 +85,13 @@ export function Profile() {
               onSubmit={submitPassword}>
               
               <Field label="Current password" className="sm:col-span-2">
-                <Input required type="password" value={passwords.currentPassword} onChange={(event) => setPasswords((value) => ({ ...value, currentPassword: event.target.value }))} placeholder="Current password" autoComplete="current-password" />
+                <PasswordInput required value={passwords.currentPassword} onChange={(event) => setPasswords((value) => ({ ...value, currentPassword: event.target.value }))} placeholder="Current password" autoComplete="current-password" />
               </Field>
               <Field label="New password">
-                <Input required minLength={8} type="password" value={passwords.newPassword} onChange={(event) => setPasswords((value) => ({ ...value, newPassword: event.target.value }))} placeholder="Minimum 8 characters" autoComplete="new-password" />
+                <PasswordInput required minLength={8} value={passwords.newPassword} onChange={(event) => setPasswords((value) => ({ ...value, newPassword: event.target.value }))} placeholder="Minimum 8 characters" autoComplete="new-password" />
               </Field>
               <Field label="Confirm new password">
-                <Input required minLength={8} type="password" value={passwords.confirmPassword} onChange={(event) => setPasswords((value) => ({ ...value, confirmPassword: event.target.value }))} placeholder="Re-enter password" autoComplete="new-password" />
+                <PasswordInput required minLength={8} value={passwords.confirmPassword} onChange={(event) => setPasswords((value) => ({ ...value, confirmPassword: event.target.value }))} placeholder="Re-enter password" autoComplete="new-password" />
               </Field>
               <div className="flex items-center gap-3 sm:col-span-2">
                 <Button type="submit" disabled={authLoading}>{authLoading ? 'Updating...' : 'Update password'}</Button>

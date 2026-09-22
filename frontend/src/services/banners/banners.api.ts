@@ -1,6 +1,6 @@
 import axios from 'axios';
 const api = axios.create({ baseURL: import.meta.env.VITE_API_URL, withCredentials: true });
-export type Banner = { _id: string; title: string; subtitle: string; thumbnail: string; buttonLabel: string; buttonUrl: string; placement: 'home' | 'dashboard' | 'both'; status: 'draft' | 'published'; order: number };
+export type Banner = { _id: string; title: string; subtitle: string; showText?: boolean; thumbnail: string; buttonLabel: string; buttonUrl: string; placement: 'home' | 'dashboard' | 'both'; status: 'draft' | 'published'; order: number };
 export type BannerPayload = Omit<Banner, '_id' | 'thumbnail'>;
 export const bannersApi = {
   listPublic: (placement: 'home' | 'dashboard') => api.get('/banners', { params: { placement } }),

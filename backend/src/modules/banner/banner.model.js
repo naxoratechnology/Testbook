@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const schema = new mongoose.Schema({
   title: { type: String, required: true, trim: true, maxlength: 120 },
   subtitle: { type: String, default: '', trim: true, maxlength: 300 },
+  showText: { type: Boolean, default: false },
   thumbnail: { type: String, default: '' },
   thumbnailPublicId: { type: String, default: '', select: false },
   buttonLabel: { type: String, default: '', trim: true, maxlength: 40 },
