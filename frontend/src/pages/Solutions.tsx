@@ -44,7 +44,7 @@ export function Solutions({ source = 'test-series' }: { source?: QuestionSource 
       <h1 className="order-last w-full min-w-0 text-sm font-semibold sm:order-none sm:w-auto sm:flex-1 sm:text-base">{result.title}</h1>
     </header>
     <main className="w-full p-4 sm:p-6"><p className="mb-4 text-sm text-ink-muted">{result.preview ? 'Read correct answers and explanations before attempting the paper.' : 'Review your answers and explanations.'}</p>
-    <SolutionReview key={result._id} result={result} index={index} onJump={setIndex} name={user.name} actions={<><BookmarkButton key={question._id} reference={reference} /><ReportQuestionButton key={question._id} reference={reference} /></>} navigation={<Link to={hasResult ? `/test-series/${seriesId}/tests/${testId}/result` : back} className={btn('ghost', 'sm')}>{hasResult ? 'Result' : 'Back to Tests'}</Link>} />
+    <SolutionReview key={result._id} result={result} index={index} onJump={setIndex} name={user.name} actions={<><BookmarkButton reference={reference} /><ReportQuestionButton reference={reference} /></>} navigation={<Link to={hasResult ? `/test-series/${seriesId}/tests/${testId}/result` : back} className={btn('ghost', 'sm')}>{hasResult ? 'Result' : 'Back to Tests'}</Link>} />
     </main>
   </div>;
 }

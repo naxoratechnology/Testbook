@@ -11,10 +11,15 @@ const empty: BannerPayload = {
   subtitle: '',
   showText: false,
   buttonLabel: '',
-  buttonUrl: '/courses',
+  buttonUrl: '',
   placement: 'both',
   status: 'published',
   order: 0,
+};
+
+const normalizeButtonUrl = (url: string) => {
+  const value = url.trim();
+  return value && !/^https?:\/\//i.test(value) && !value.startsWith('/') ? `/${value}` : value;
 };
 
 export function AdminBanners() {
@@ -139,6 +144,7 @@ export function AdminBanners() {
                 <Td>
                   <p className="font-medium text-ink">{item.title}</p>
                   <p className="mt-0.5 max-w-sm truncate text-xs text-ink-muted">{item.showText ? item.subtitle || 'Text overlay enabled' : 'Image only'}</p>
+                  {item.showText && item.buttonLabel && <p className="mt-1 max-w-sm truncate text-xs text-brand-700">{item.buttonLabel} → {item.buttonUrl || 'No link set'}</p>}
                 </Td>
                 <Td><Badge tone="brand">{item.placement === 'both' ? 'Home + Dashboard' : item.placement}</Badge></Td>
                 <Td>{item.order}</Td>
@@ -167,8 +173,8 @@ export function AdminBanners() {
             <label className="flex items-start gap-3 rounded-xl border border-line bg-canvas/60 p-3 text-sm text-ink"><input type="checkbox" checked={Boolean(form.showText)} onChange={(event) => setForm({ ...form, showText: event.target.checked })} className="mt-0.5 h-4 w-4 accent-brand-600" /><span><span className="block font-medium">Show text on this banner (optional)</span><span className="mt-1 block text-xs text-ink-muted">Leave off for image-only banners that already contain their own text.</span></span></label>
             {form.showText && <Field label="Short supporting text (optional)"><Textarea rows={2} maxLength={300} value={form.subtitle} onChange={(event) => setForm({ ...form, subtitle: event.target.value })} /></Field>}
             <div className="grid gap-4 sm:grid-cols-2">
-              {form.showText && <><Field label="Button label (optional)"><Input value={form.buttonLabel} onChange={(event) => setForm({ ...form, buttonLabel: event.target.value })} /></Field>
-              <Field label="Button link (optional)"><Input value={form.buttonUrl} onChange={(event) => setForm({ ...form, buttonUrl: event.target.value })} /></Field></>}
+              {form.showText && <><Field label="Button label (optional)" hint="For example: Click to buy"><Input maxLength={40} placeholder="Click to buy" value={form.buttonLabel} onChange={(event) => setForm({ ...form, buttonLabel: event.target.value })} /></Field>
+              <Field label="Button click link (optional)" hint="Enter a website path such as test-series/ID, or a full https:// URL. The / is added automatically."><Input type="text" maxLength={300} placeholder="test-series/your-series-id" value={form.buttonUrl} onChange={(event) => setForm({ ...form, buttonUrl: event.target.value })} onBlur={() => setForm((current) => ({ ...current, buttonUrl: normalizeButtonUrl(current.buttonUrl) }))} /></Field></>}
               <Field label="Show on">
                 <Select value={form.placement} onChange={(event) => setForm({ ...form, placement: event.target.value as BannerPayload['placement'] })}>
                   <option value="both">Home + Dashboard</option>
