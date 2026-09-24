@@ -2,22 +2,22 @@ import axios from 'axios';
 import * as yup from 'yup';
 
 export type SeriesStatus = 'draft' | 'published' | 'unpublished';
-export type SeriesKind = 'full' | 'sectional' | 'current-affairs' | 'previous-year';
+export type SeriesKind = string;
 export interface SeriesQuestion { _id?: string; text: string; options: string[]; correctAnswer: number; explanation: string; marks: number; negativeMarks: number }
 export interface PublicSeriesQuestion extends Omit<SeriesQuestion, 'correctAnswer' | 'explanation'> { _id: string; correctAnswer?: number; explanation?: string }
 export interface PublicSeriesTest extends Omit<SeriesTest, 'questions'> { questions: PublicSeriesQuestion[] }
 export interface PublicTestSeries extends Omit<AdminTestSeries, 'tests'> { purchased: boolean; tests: PublicSeriesTest[] }
 export interface AttemptResult { _id: string; series: string; test: string; testTitle: string; answers: Record<string, number>; score: number; correct: number; incorrect: number; unanswered: number; accuracy: number; totalMarks: number; submittedAt: string; questions: SeriesQuestion[] }
 export interface SeriesTest { _id: string; title: string; subject?: string; duration: number; questions: SeriesQuestion[]; status: SeriesStatus; isPreview?: boolean; createdAt: string }
-export interface AdminTestSeries { thumbnail?: string; _id: string; title: string; description: string; exam: string; kind: SeriesKind; access: 'free' | 'paid'; price: number; difficulty: 'Easy' | 'Moderate' | 'Hard'; languages: string; subjects?: string[]; tests: SeriesTest[]; status: SeriesStatus; createdAt: string }
-export interface SeriesPayload { title: string; description: string; exam: string; kind: SeriesKind; access: 'free' | 'paid'; price: number; difficulty: 'Easy' | 'Moderate' | 'Hard'; languages: string; subjects?: string[]; status: SeriesStatus }
+export interface AdminTestSeries { thumbnail?: string; _id: string; title: string; description: string; exam: string; kind: SeriesKind; access: 'free' | 'paid'; price: number; difficulty: string; languages: string; subjects?: string[]; tests: SeriesTest[]; status: SeriesStatus; createdAt: string }
+export interface SeriesPayload { title: string; description: string; exam: string; kind: SeriesKind; access: 'free' | 'paid'; price: number; difficulty: string; languages: string; subjects?: string[]; status: SeriesStatus }
 export interface TestPayload { title: string; subject?: string; duration: number; questions: SeriesQuestion[]; status: SeriesStatus; isPreview?: boolean }
 
 export const seriesSchema = yup.object({
   title: yup.string().trim().required('Series name is required.'), description: yup.string().trim().required('Description is required.'), exam: yup.string().trim().required('Exam is required.'),
-  kind: yup.mixed<SeriesKind>().oneOf(['full', 'sectional', 'current-affairs', 'previous-year']).required(), access: yup.mixed<'free' | 'paid'>().oneOf(['free', 'paid']).required(),
+  kind: yup.string().trim().required('Test type is required.').max(120), access: yup.mixed<'free' | 'paid'>().oneOf(['free', 'paid']).required(),
   price: yup.number().min(0).when('access', { is: 'paid', then: (schema) => schema.moreThan(0, 'Price must be greater than zero.') }),
-  difficulty: yup.mixed<'Easy' | 'Moderate' | 'Hard'>().oneOf(['Easy', 'Moderate', 'Hard']).required(), languages: yup.string().required(), subjects: yup.array().of(yup.string().trim().required().max(120)).default([]), status: yup.mixed<SeriesStatus>().oneOf(['draft', 'published', 'unpublished']).required(),
+  difficulty: yup.string().trim().required('Difficulty is required.').max(120), languages: yup.string().required(), subjects: yup.array().of(yup.string().trim().required().max(120)).default([]), status: yup.mixed<SeriesStatus>().oneOf(['draft', 'published', 'unpublished']).required(),
 });
 export const testSchema = yup.object({ title: yup.string().trim().required('Test name is required.'), subject: yup.string().trim().max(120).default(''), duration: yup.number().integer().min(1).required(), questions: yup.array().min(1, 'Add at least one question.').required(), status: yup.mixed<SeriesStatus>().oneOf(['draft', 'published', 'unpublished']).required() });
 

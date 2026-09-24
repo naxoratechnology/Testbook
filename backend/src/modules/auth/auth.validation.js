@@ -23,4 +23,18 @@ function changePassword(body = {}) {
   if (value.currentPassword && value.currentPassword === value.newPassword) errors.newPassword = 'New password must be different from the current password.';
   return { value, errors };
 }
-module.exports = { register, login, changePassword };
+function forgotPassword(body = {}) {
+  const value = { email: String(body.email || '').trim().toLowerCase() };
+  const errors = {};
+  if (!email.test(value.email)) errors.email = 'Enter a valid email.';
+  return { value, errors };
+}
+function resetPassword(body = {}) {
+  const value = { email: String(body.email || '').trim().toLowerCase(), otp: String(body.otp || '').trim(), newPassword: String(body.newPassword || '') };
+  const errors = {};
+  if (!email.test(value.email)) errors.email = 'Enter a valid email.';
+  if (!/^\d{6}$/.test(value.otp)) errors.otp = 'Enter the 6-digit OTP.';
+  if (value.newPassword.length < 8 || value.newPassword.length > 72) errors.newPassword = 'New password must be 8-72 characters.';
+  return { value, errors };
+}
+module.exports = { register, login, changePassword, forgotPassword, resetPassword };

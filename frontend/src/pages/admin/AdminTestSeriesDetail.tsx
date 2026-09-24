@@ -24,12 +24,13 @@ export function AdminTestSeriesDetail() {
   if (loading) return <PageShell title="Test Series" subtitle="Loading details..." width="max-w-[1200px]"><Panel><p className="text-sm text-ink-muted">Loading test series...</p></Panel></PageShell>;
   if (!series) return <PageShell title="Test Series" subtitle="Unable to open this series." width="max-w-[1200px]"><Panel>{error && <p className="mb-4 text-sm text-red-600">{error}</p>}<Link to="/admin/test-series" className={btn('secondary', 'md')}><ArrowLeftIcon className="h-4 w-4" /> Back to test series</Link></Panel></PageShell>;
 
-  return <PageShell title={series.title} subtitle={series.description} width="max-w-[1200px]" actions={<ActionMenu actions={[
+  return <PageShell title={series.title} width="max-w-[1200px]" actions={<ActionMenu actions={[
     { label: 'Add test', icon: <PlusIcon className="h-4 w-4" />, href: `/admin/test-series/${series._id}/tests/new` },
     { label: 'Edit series', icon: <PencilIcon className="h-4 w-4" />, href: `/admin/test-series/${series._id}/edit` },
     { label: 'Reported questions', icon: <FlagIcon className="h-4 w-4" />, href: '/admin/question-reports' },
     { label: 'Delete series', icon: <Trash2Icon className="h-4 w-4" />, danger: true, disabled: saving, onClick: () => { if (window.confirm('Delete this series and all of its tests?')) void dispatch(deleteTestSeries(series._id)).unwrap().then(() => navigate('/admin/test-series')).catch(() => undefined); } },
   ]} />}>
+    <RichText value={series.description} className="mb-5 text-sm leading-6 text-ink-soft" />
     <Link to="/admin/test-series" className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-ink-muted hover:text-ink"><ArrowLeftIcon className="h-4 w-4" /> Back to test series</Link>
     <Panel className="mb-5"><div className="flex flex-wrap items-start justify-between gap-4"><div><div className="flex flex-wrap items-center gap-2"><StatusBadge status={series.status} /><Badge tone={series.access === 'free' ? 'green' : 'violet'}>{series.access === 'free' ? 'Free' : `₹${series.price}`}</Badge><Badge tone="brand">{series.kind.replace('-', ' ')}</Badge></div><p className="mt-4 text-sm leading-6 text-ink-soft">{series.exam} · {series.difficulty} · {series.languages}</p></div><p className="text-xs text-ink-muted">Created {new Date(series.createdAt).toLocaleDateString('en-IN')}</p></div></Panel>
     <div className="mb-6 grid gap-4 sm:grid-cols-3"><StatCard label="Tests" value={String(series.tests.length)} icon={<CheckCircle2Icon className="h-4 w-4" />} /><StatCard label="Questions" value={String(questions)} icon={<FileQuestionIcon className="h-4 w-4" />} /><StatCard label="Total duration" value={`${totalMinutes} min`} icon={<Clock3Icon className="h-4 w-4" />} /></div>

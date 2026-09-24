@@ -11,6 +11,7 @@ export function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const passwordReset = Boolean((location.state as { passwordReset?: boolean } | null)?.passwordReset);
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -37,8 +38,10 @@ export function Login() {
   };
   return <AuthShell title="Welcome back" subtitle="Log in to continue your preparation where you left off." footer={<>New to Chandrabhaga Academy? <Link to="/register" className="font-semibold text-brand-700 hover:underline">Create an account</Link></>}>
     <form onSubmit={submit} className="space-y-4" noValidate>
+      {passwordReset && <p role="status" className="rounded-xl bg-emerald-50 px-3 py-2.5 text-[13px] text-emerald-700">Password reset successfully. Log in with your new password.</p>}
       <Field label="Email or mobile"><Input value={identifier} onChange={(e) => update('identifier', e.target.value)} onBlur={() => void validateField('identifier')} placeholder="aarav@example.com" autoComplete="username" aria-invalid={Boolean(errors.identifier)} aria-describedby={errors.identifier ? 'login-identifier-error' : undefined} />{errors.identifier && <span id="login-identifier-error" role="alert" className="mt-1 block text-xs text-red-600">{errors.identifier}</span>}</Field>
       <Field label="Password"><PasswordInput value={password} onChange={(e) => update('password', e.target.value)} onBlur={() => void validateField('password')} placeholder="••••••••" autoComplete="current-password" aria-invalid={Boolean(errors.password)} aria-describedby={errors.password ? 'login-password-error' : undefined} />{errors.password && <span id="login-password-error" role="alert" className="mt-1 block text-xs text-red-600">{errors.password}</span>}</Field>
+      <div className="flex justify-end"><Link to="/forgot-password" className="text-[13px] font-semibold text-brand-700 hover:underline">Forgot password?</Link></div>
       {error && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2.5 text-[13px] text-red-600">{error}</p>}
       <Button type="submit" size="lg" className="w-full" disabled={loading}>{loading ? 'Logging in…' : 'Login'}</Button>
     </form>

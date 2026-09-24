@@ -19,6 +19,8 @@ export const loginSchema = yup.object({
   password: yup.string().required('Password is required.'),
 });
 export const changePasswordSchema = yup.object({ currentPassword: yup.string().required('Current password is required.'), newPassword: yup.string().min(8, 'Password must be at least 8 characters.').max(72).required('New password is required.'), confirmPassword: yup.string().oneOf([yup.ref('newPassword')], 'Passwords do not match.').required('Confirm your new password.') });
+export const forgotPasswordSchema = yup.object({ email: yup.string().trim().email('Enter a valid email.').required('Email is required.') });
+export const resetPasswordSchema = yup.object({ email: yup.string().trim().email().required(), otp: yup.string().matches(/^\d{6}$/, 'Enter the 6-digit OTP.').required('OTP is required.'), newPassword: yup.string().min(8, 'Password must be at least 8 characters.').max(72).required('New password is required.'), confirmPassword: yup.string().oneOf([yup.ref('newPassword')], 'Passwords do not match.').required('Confirm your password.') });
 
 export type LoginPayload = yup.InferType<typeof loginSchema>;
 export type RegisterPayload = yup.InferType<typeof registerSchema>;
@@ -31,4 +33,6 @@ export const authApiService = {
   refresh: () => authApi.post('/auth/refresh'),
   logout: () => authApi.post('/auth/logout'),
   changePassword: (data: Omit<ChangePasswordPayload, 'confirmPassword'>) => authApi.patch('/auth/password', data),
+  forgotPassword: (email: string) => authApi.post('/auth/forgot-password', { email }),
+  resetPassword: (data: { email: string; otp: string; newPassword: string }) => authApi.post('/auth/reset-password', data),
 };

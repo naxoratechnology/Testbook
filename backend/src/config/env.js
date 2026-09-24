@@ -34,6 +34,8 @@ const env = {
     ].map((origin) => origin.trim().replace(/\/$/, '')).filter(Boolean))],
   },
 
+  publicWebUrl: (process.env.PUBLIC_WEB_URL || process.env.CLIENT_ORIGIN || 'https://www.chandrabhagaacademy.com').split(',')[0].trim().replace(/\/$/, ''),
+
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || 'development-access-secret-change-me',
     refreshSecret: process.env.JWT_REFRESH_SECRET || 'development-refresh-secret-change-me',
@@ -45,6 +47,17 @@ const env = {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME,
     apiKey: process.env.CLOUDINARY_API_KEY,
     apiSecret: process.env.CLOUDINARY_API_SECRET,
+  },
+
+  smtp: {
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: process.env.SMTP_SECURE === 'true',
+    email: process.env.SMTP_EMAIL || '',
+    password: process.env.SMTP_PASSWORD || '',
+    fromName: process.env.SMTP_FROM_NAME || 'Chandrabhaga Academy',
+    fromEmail: process.env.SMTP_FROM_EMAIL || process.env.SMTP_EMAIL || '',
+    replyTo: process.env.SMTP_REPLY_TO || process.env.SMTP_FROM_EMAIL || process.env.SMTP_EMAIL || '',
   },
 };
 

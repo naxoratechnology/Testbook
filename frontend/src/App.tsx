@@ -11,6 +11,7 @@ import { About } from './pages/About';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { ForgotPassword } from './pages/ForgotPassword';
 import { Dashboard } from './pages/Dashboard';
 import { Courses } from './pages/Courses';
 import { CourseDetail } from './pages/CourseDetail';
@@ -91,6 +92,7 @@ export function App() {
 
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/learn/:courseId/:lessonId" element={<VideoViewer />} />
             <Route path="/test-series/:seriesId/tests/:testId" element={<TestInterface />} />
 

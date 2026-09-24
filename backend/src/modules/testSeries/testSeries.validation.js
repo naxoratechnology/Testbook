@@ -1,7 +1,7 @@
 function series(body = {}) {
-  const value = { title: String(body.title || '').trim(), description: String(body.description || '').trim(), exam: String(body.exam || '').trim(), kind: body.kind || 'full', access: body.access === 'paid' ? 'paid' : 'free', price: Number(body.price || 0), difficulty: body.difficulty || 'Moderate', languages: String(body.languages || 'English'), subjects: Array.isArray(body.subjects) ? body.subjects.map(item => String(item).trim()) : [], status: body.status || 'draft' };
+  const value = { title: String(body.title || '').trim(), description: String(body.description || '').trim(), exam: String(body.exam || '').trim(), kind: String(body.kind || '').trim(), access: body.access === 'paid' ? 'paid' : 'free', price: Number(body.price || 0), difficulty: String(body.difficulty || '').trim(), languages: String(body.languages || 'English'), subjects: Array.isArray(body.subjects) ? body.subjects.map(item => String(item).trim()) : [], status: body.status || 'draft' };
   const errors = {};
-  ['title', 'description', 'exam'].forEach((key) => { if (!value[key]) errors[key] = key + ' is required.'; });
+  ['title', 'description', 'exam', 'kind', 'difficulty'].forEach((key) => { if (!value[key]) errors[key] = key + ' is required.'; else if (value[key].length > 120 && key !== 'description') errors[key] = key + ' must be 120 characters or fewer.'; });
   if (value.access === 'paid' && value.price <= 0) errors.price = 'Paid series require a price.';
   if (value.subjects.some(item => !item || item.length > 120) || new Set(value.subjects.map(item => item.toLowerCase())).size !== value.subjects.length) errors.subjects = 'Enter unique subject names of 1–120 characters.';
   return { value, errors };

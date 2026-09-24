@@ -10,6 +10,10 @@ const authSchema = new mongoose.Schema(
     targetExam: { type: String, trim: true, default: '' },
     isActive: { type: Boolean, default: true, index: true },
     lastLoginAt: { type: Date, default: null },
+    passwordResetOtpHash: { type: String, default: '', select: false },
+    passwordResetOtpExpiresAt: { type: Date, default: null, select: false },
+    passwordResetOtpAttempts: { type: Number, default: 0, select: false },
+    passwordResetOtpSentAt: { type: Date, default: null, select: false },
   },
   { timestamps: true, versionKey: false }
 );
