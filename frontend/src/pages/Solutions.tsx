@@ -1,7 +1,7 @@
 import { SolutionReview } from '../components/tests/SolutionReview';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { BookmarkButton } from '../components/tests/BookmarkButton';
 import { ReportQuestionButton } from '../components/tests/ReportQuestionButton';
 import { PageShell } from '../components/ui/PageShell';
@@ -14,6 +14,7 @@ import type { AppDispatch, RootState } from '../store';
 
 export function Solutions({ source = 'test-series' }: { source?: QuestionSource }) {
   const { seriesId = '', testId = '', entryId = '', paperId = '' } = useParams();
+  const location = useLocation();
   const sourceId = source === 'test-series' ? seriesId : source === 'current-affairs' ? entryId : paperId;
   const { user } = useAuth(); const dispatch = useDispatch<AppDispatch>();
   const currentAttempt = useSelector((state: RootState) => state.testSeries.attemptResult);
@@ -32,7 +33,7 @@ export function Solutions({ source = 'test-series' }: { source?: QuestionSource 
     const original = document.body.style.overflow; document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = original; };
   }, [Boolean(result)]);
-  if (!user) return <PageShell title="Solutions" subtitle={source === 'previous-paper' ? 'Log in to view paper answers and explanations.' : 'Log in to view your attempted test solutions.'}><Link to={`/login?redirect=${encodeURIComponent(window.location.pathname)}`} className={btn('primary', 'md')}>Login</Link></PageShell>;
+  if (!user) return <PageShell title="Solutions" subtitle={source === 'previous-paper' ? 'Log in to view paper answers and explanations.' : 'Log in to view your attempted test solutions.'}><Link to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} className={btn('primary', 'md')}>Login</Link></PageShell>;
   if (!result) return <PageShell title="Solutions"><p role={error ? 'alert' : undefined} className={error ? 'text-sm text-red-600' : 'text-sm text-ink-muted'}>{error || 'Loading solutions...'}</p>{error && <Link to={back} className={btn('secondary', 'md', 'mt-4')}>Back to Tests</Link>}</PageShell>;
   const question = result.questions[index];
   if (!question) return <PageShell title="Solutions"><Link to={back} className={btn('secondary', 'md')}>Back to Tests</Link></PageShell>;

@@ -59,3 +59,15 @@ body {
   vertical-align: sub;
   font-size: 0.72em;
 }
+.option-rich-text {
+  white-space: normal;
+}
+.option-rich-text p,
+.option-rich-text div {
+  display: inline;
+  margin: 0;
+}
+.option-rich-text p:not(:last-child)::after,
+.option-rich-text div:not(:last-child)::after {
+  content: ' ';
+}

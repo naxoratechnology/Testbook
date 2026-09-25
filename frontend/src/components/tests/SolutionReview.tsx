@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { CheckCircleIcon, XCircleIcon } from 'lucide-react';
 import { Panel } from '../ui/PageShell';
 import { Badge, Button, Select } from '../ui/Primitives';
-import { RichText, explanationTextClass, optionTextClass, questionTextClass } from '../ui/RichText';
+import { RichText, explanationTextClass, optionContentClass, optionLabelClass, questionTextClass } from '../ui/RichText';
 import type { ReviewResult } from '../../services/question-review/questionReview.api';
 
 export type AnswerStatus = 'correct' | 'incorrect' | 'skipped';
@@ -30,7 +30,7 @@ export function SolutionReview({ result, index, onJump, name, actions, navigatio
         const correct = showAnswer && optionIndex === question.correctAnswer;
         const chosen = optionIndex === (practiceMode ? practiceAnswer : answer);
         const tone = correct ? 'border-emerald-300 bg-emerald-50' : chosen && showAnswer ? 'border-red-300 bg-red-50' : chosen ? 'border-brand-300 bg-brand-50' : 'border-line';
-        const content = <><div className="flex items-start gap-2">{correct ? <CheckCircleIcon className="mt-1 h-5 w-5 shrink-0 text-emerald-600" /> : chosen && showAnswer ? <XCircleIcon className="mt-1 h-5 w-5 shrink-0 text-red-600" /> : null}<span className={optionTextClass}>{String.fromCharCode(65 + optionIndex)}.</span><RichText value={option} className={`min-w-0 flex-1 ${optionTextClass}`} /></div>{showAnswer && (chosen || correct) && <p className={`mt-2 text-sm font-semibold ${correct ? 'text-emerald-700' : 'text-red-600'}`}>{chosen && correct ? 'Your answer · Correct answer' : correct ? 'Correct answer' : 'Your answer · Incorrect'}</p>}</>;
+        const content = <><div className="flex items-start gap-2">{correct ? <CheckCircleIcon className="mt-1 h-5 w-5 shrink-0 text-emerald-600" /> : chosen && showAnswer ? <XCircleIcon className="mt-1 h-5 w-5 shrink-0 text-red-600" /> : null}<span className={optionLabelClass}>{String.fromCharCode(65 + optionIndex)}.</span><RichText value={option} className={optionContentClass} /></div>{showAnswer && (chosen || correct) && <p className={`mt-2 text-sm font-semibold ${correct ? 'text-emerald-700' : 'text-red-600'}`}>{chosen && correct ? 'Your answer · Correct answer' : correct ? 'Correct answer' : 'Your answer · Incorrect'}</p>}</>;
         return practiceMode ? <button key={optionIndex} type="button" disabled={practiceAnswer !== undefined} onClick={() => setPracticeAnswers(current => ({ ...current, [question._id]: optionIndex }))} className={`w-full rounded-xl border p-4 text-left disabled:cursor-default ${tone}`}>{content}</button> : <div key={optionIndex} className={`rounded-xl border p-4 ${tone}`}>{content}</div>;
       })}</div>
       {practiceMode && <div className="mt-5 flex flex-wrap items-center gap-3 rounded-xl bg-amber-50 p-3 text-sm text-ink-soft"><span>Re-attempt mode: ON</span>{practiceAnswer === undefined && <span>Choose an answer to check yourself.</span>}{practiceAnswer !== undefined && <button type="button" className="font-semibold text-brand-700" onClick={() => { setPracticeAnswers(current => { const next = { ...current }; delete next[question._id]; return next; }); setRevealed(current => { const next = { ...current }; delete next[question._id]; return next; }); }}>Try again</button>}<button type="button" className="font-semibold text-brand-700" onClick={() => setRevealed(current => ({ ...current, [question._id]: true }))}>View Solution</button></div>}

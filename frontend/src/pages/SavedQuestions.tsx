@@ -7,7 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { PageShell, Panel } from '../components/ui/PageShell';
 import { Button, btn } from '../components/ui/Primitives';
 import { BookmarkButton } from '../components/tests/BookmarkButton';
-import { RichText, explanationTextClass, optionTextClass, questionTextClass } from '../components/ui/RichText';
+import { RichText, explanationTextClass, optionContentClass, optionLabelClass, optionTextClass, questionTextClass } from '../components/ui/RichText';
 import { fetchBookmarks } from '../services/bookmarks/bookmarks.slice';
 import type { AppDispatch, RootState } from '../store';
 
@@ -37,7 +37,7 @@ export function SavedQuestions({ embedded = false }: { embedded?: boolean }) {
             <div className={`mt-4 flex gap-2 ${questionTextClass}`}><span>{index + 1}.</span><RichText value={item.question.text} /></div>
             <ol className="mt-4 space-y-2">{item.question.options.map((option, optionIndex) => <li key={optionIndex} className={`flex items-start gap-2 rounded-xl border p-3 ${optionTextClass} ${showSolution && optionIndex === correct ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-line text-ink-soft'}`}>
               {showSolution && optionIndex === correct && <CheckCircleIcon className="mt-1 h-5 w-5 shrink-0 text-emerald-600" />}
-              <span>{String.fromCharCode(65 + optionIndex)}.</span><RichText value={option} className="min-w-0 flex-1" />
+              <span className={optionLabelClass}>{String.fromCharCode(65 + optionIndex)}.</span><RichText value={option} className={optionContentClass} />
             </li>)}</ol>
             <Button type="button" variant="secondary" size="sm" className="mt-4" aria-expanded={showSolution} aria-controls={`saved-solution-${item._id}`} onClick={() => setRevealed((current) => ({ ...current, [item._id]: !current[item._id] }))}>{showSolution ? 'Hide Solution' : 'Solution'}</Button>
             {showSolution && <div id={`saved-solution-${item._id}`} className="mt-4 rounded-xl bg-brand-50 p-4 text-ink-soft">{Number.isInteger(correct)

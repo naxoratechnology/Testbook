@@ -1,6 +1,9 @@
 const User = require('../auth/auth.model');
 const Purchase = require('../testSeries/testSeries.purchase.model');
 const Attempt = require('../testSeries/testSeries.attempt.model');
+const Course = require('../course/course.model');
+const Enrollment = require('../course/course.enrollment.model');
+const TestSeries = require('../testSeries/testSeries.model');
 
 const projection = '-password';
 
@@ -26,14 +29,34 @@ const listStudents = async ({ active, exam, search }) => {
 const getStudent = async (id) => {
   const student = await User.findOne({ _id: id, role: 'student' }, projection).lean();
   if (!student) return null;
-  const [purchases, attempts] = await Promise.all([
+  const [purchases, enrollments, attempts, paidCourses, paidSeries] = await Promise.all([
     Purchase.find({ user: id, status: 'active' }).populate('series', 'title access status').sort({ createdAt: -1 }).lean(),
+    Enrollment.find({ user: id, status: 'active' }).populate('course', 'title access status').sort({ createdAt: -1 }).lean(),
     Attempt.find({ user: id }).populate('series', 'title tests').sort({ submittedAt: -1 }).lean(),
+    Course.find({ access: 'paid', status: 'published' }).select('title price').sort({ title: 1 }).lean(),
+    TestSeries.find({ access: 'paid', status: 'published' }).select('title price').sort({ title: 1 }).lean(),
   ]);
   const testAttempts = attempts.map((attempt) => { const series = attempt.series; const test = series?.tests?.find((item) => String(item._id) === String(attempt.test)); return { _id: attempt._id, seriesTitle: series?.title || 'Test Series', testTitle: test?.title || 'Test', score: attempt.score, accuracy: attempt.accuracy, correct: attempt.correct, incorrect: attempt.incorrect, unanswered: attempt.unanswered, submittedAt: attempt.submittedAt }; });
-  return { ...student, purchasedSeries: purchases.map((purchase) => purchase.series).filter(Boolean), testAttempts, averageAccuracy: testAttempts.length ? Math.round(testAttempts.reduce((sum, attempt) => sum + attempt.accuracy, 0) / testAttempts.length) : 0 };
+  const purchasedSeries = purchases.map((purchase) => purchase.series).filter(Boolean);
+  const enrolledCourses = enrollments.map((enrollment) => enrollment.course).filter(Boolean);
+  const activeCourseIds = new Set(enrolledCourses.map((course) => String(course._id))); const activeSeriesIds = new Set(purchasedSeries.map((series) => String(series._id)));
+  return { ...student, purchasedSeries, enrolledCourses, accessOptions: { courses: paidCourses.filter((course) => !activeCourseIds.has(String(course._id))), testSeries: paidSeries.filter((series) => !activeSeriesIds.has(String(series._id))) }, testAttempts, averageAccuracy: testAttempts.length ? Math.round(testAttempts.reduce((sum, attempt) => sum + attempt.accuracy, 0) / testAttempts.length) : 0 };
+};
+const grantAccess = async (studentId, { type, contentId }, adminId) => {
+  const student = await User.findOne({ _id: studentId, role: 'student', isActive: true });
+  if (!student) throw Object.assign(new Error('Active student not found.'), { statusCode: 404 });
+  if (type === 'course') {
+    const course = await Course.findOne({ _id: contentId, access: 'paid', status: 'published' });
+    if (!course) throw Object.assign(new Error('Paid course not found or not published.'), { statusCode: 404 });
+    await Enrollment.findOneAndUpdate({ user: studentId, course: contentId }, { status: 'active', amount: 0, currency: 'INR', purchasedAt: new Date(), accessSource: 'admin', grantedBy: adminId }, { upsert: true, new: true, runValidators: true });
+  } else {
+    const series = await TestSeries.findOne({ _id: contentId, access: 'paid', status: 'published' });
+    if (!series) throw Object.assign(new Error('Paid test series not found or not published.'), { statusCode: 404 });
+    await Purchase.findOneAndUpdate({ user: studentId, series: contentId }, { status: 'active', amount: 0, currency: 'INR', purchasedAt: new Date(), accessSource: 'admin', grantedBy: adminId }, { upsert: true, new: true, runValidators: true });
+  }
+  return getStudent(studentId);
 };
 const updateStatus = (id, isActive) => User.findOneAndUpdate({ _id: id, role: 'student' }, { $set: { isActive } }, { new: true, projection }).lean();
 const deleteStudent = (id) => User.findOneAndDelete({ _id: id, role: 'student' }, { projection }).lean();
 
-module.exports = { listStudents, getStudent, updateStatus, deleteStudent };
+module.exports = { listStudents, getStudent, updateStatus, grantAccess, deleteStudent };

@@ -1,5 +1,5 @@
 const service = require('./student.service');
-const { statusSchema } = require('./student.validation');
+const { statusSchema, accessSchema } = require('./student.validation');
 
 const parseActive = (value) => {
   if (value === undefined) return undefined;
@@ -34,6 +34,14 @@ const status = async (req, res, next) => {
     res.json({ success: true, message: 'Student status updated', data });
   } catch (error) { next(error); }
 };
+const grantAccess = async (req, res, next) => {
+  try {
+    const parsed = accessSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ success: false, message: 'Select a valid paid course or test series.' });
+    const data = await service.grantAccess(req.params.id, parsed.data, req.auth.sub);
+    res.json({ success: true, message: 'Access granted successfully.', data });
+  } catch (error) { next(error); }
+};
 
 const remove = async (req, res, next) => {
   try {
@@ -43,4 +51,4 @@ const remove = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-module.exports = { list, getOne, status, remove };
+module.exports = { list, getOne, status, grantAccess, remove };

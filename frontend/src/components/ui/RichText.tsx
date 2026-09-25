@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 
 export const questionTextClass = 'text-base font-semibold leading-7 text-ink sm:text-lg';
 export const optionTextClass = 'text-base font-medium leading-7 sm:text-lg';
+export const optionLabelClass = 'w-7 shrink-0 text-center text-base font-medium leading-7 sm:text-lg';
+export const optionContentClass = 'option-rich-text min-w-0 flex-1 text-base font-medium leading-7 sm:text-lg';
 export const explanationTextClass = 'text-base font-normal leading-7 sm:text-lg';
 
 const allowedTags = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'SUP', 'SUB', 'P', 'DIV', 'BR', 'UL', 'OL', 'LI']);

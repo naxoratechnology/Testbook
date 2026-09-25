@@ -7,6 +7,7 @@ router.use(requireAuth, requireRole('admin'));
 router.get('/', controller.list);
 router.get('/:id', controller.getOne);
 router.patch('/:id/status', controller.status);
+router.post('/:id/access', controller.grantAccess);
 router.delete('/:id', controller.remove);
 
 module.exports = router;
