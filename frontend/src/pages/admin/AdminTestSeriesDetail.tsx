@@ -21,10 +21,10 @@ export function AdminTestSeriesDetail() {
   const questions = series?.tests.reduce((total, test) => total + test.questions.length, 0) || 0;
   const totalMinutes = series?.tests.reduce((total, test) => total + test.duration, 0) || 0;
 
-  if (loading) return <PageShell title="Test Series" subtitle="Loading details..." width="max-w-[1200px]"><Panel><p className="text-sm text-ink-muted">Loading test series...</p></Panel></PageShell>;
-  if (!series) return <PageShell title="Test Series" subtitle="Unable to open this series." width="max-w-[1200px]"><Panel>{error && <p className="mb-4 text-sm text-red-600">{error}</p>}<Link to="/admin/test-series" className={btn('secondary', 'md')}><ArrowLeftIcon className="h-4 w-4" /> Back to test series</Link></Panel></PageShell>;
+  if (loading) return <PageShell title="Test Series" subtitle="Loading details..." width="max-w-none"><Panel><p className="text-sm text-ink-muted">Loading test series...</p></Panel></PageShell>;
+  if (!series) return <PageShell title="Test Series" subtitle="Unable to open this series." width="max-w-none"><Panel>{error && <p className="mb-4 text-sm text-red-600">{error}</p>}<Link to="/admin/test-series" className={btn('secondary', 'md')}><ArrowLeftIcon className="h-4 w-4" /> Back to test series</Link></Panel></PageShell>;
 
-  return <PageShell title={series.title} width="max-w-[1200px]" actions={<ActionMenu actions={[
+  return <PageShell title={series.title} width="max-w-none" actions={<ActionMenu actions={[
     { label: 'Add test', icon: <PlusIcon className="h-4 w-4" />, href: `/admin/test-series/${series._id}/tests/new` },
     { label: 'Edit series', icon: <PencilIcon className="h-4 w-4" />, href: `/admin/test-series/${series._id}/edit` },
     { label: 'Reported questions', icon: <FlagIcon className="h-4 w-4" />, href: '/admin/question-reports' },

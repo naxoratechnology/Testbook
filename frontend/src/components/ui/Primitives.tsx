@@ -144,19 +144,21 @@ export function Field({
   label,
   hint,
   children,
-  className = ''
+  className = '',
+  as = 'label'
 
 
 
 
 
-}: {label: string;hint?: string;children: React.ReactNode;className?: string;}) {
+}: {label: string;hint?: string;children: React.ReactNode;className?: string;as?: 'label' | 'div';}) {
+  const Wrapper = as;
   return (
-    <label className={`block ${className}`}>
+    <Wrapper className={`block ${className}`}>
       <span className="mb-1.5 block text-[13px] font-medium text-ink">{label}</span>
       {children}
       {hint && <span className="mt-1 block text-xs text-ink-muted">{hint}</span>}
-    </label>);
+    </Wrapper>);
 
 }
 

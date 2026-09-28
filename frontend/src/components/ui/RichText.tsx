@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-export const questionTextClass = 'text-base font-semibold leading-7 text-ink sm:text-lg';
+export const questionTextClass = 'question-rich-text text-base font-semibold leading-7 text-ink sm:text-lg';
 export const optionTextClass = 'text-base font-medium leading-7 sm:text-lg';
 export const optionLabelClass = 'w-7 shrink-0 text-center text-base font-medium leading-7 sm:text-lg';
 export const optionContentClass = 'option-rich-text min-w-0 flex-1 text-base font-medium leading-7 sm:text-lg';
@@ -44,6 +44,21 @@ export function RichText({ value, className = '' }: { value: string; className?:
 export function RichTextEditor({ value, onChange, placeholder, minHeight = '110px', ariaLabel }: { value: string; onChange: (value: string) => void; placeholder?: string; minHeight?: string; ariaLabel?: string }) {
   const editor = useRef<HTMLDivElement>(null);
 
+  const emitValue = (element: HTMLDivElement) => {
+    const cleaned = sanitizeRichText(element.innerHTML);
+    onChange(richTextToPlain(cleaned) ? cleaned : '');
+  };
+
+  const ensureCaret = (element: HTMLDivElement) => {
+    const selection = window.getSelection();
+    if (!selection || (selection.rangeCount > 0 && selection.anchorNode && element.contains(selection.anchorNode))) return;
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    range.collapse(false);
+    selection?.removeAllRanges();
+    selection.addRange(range);
+  };
+
   useEffect(() => {
     if (editor.current && document.activeElement !== editor.current && editor.current.innerHTML !== value) editor.current.innerHTML = sanitizeRichText(value);
   }, [value]);
@@ -64,21 +79,38 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = '110p
     ['insertOrderedList', '1. List', 'Numbered list'],
   ];
 
-  return <div className="overflow-hidden rounded-xl border border-line bg-white focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-100">
+  return <div className="min-w-0 max-w-full overflow-hidden rounded-xl border border-line bg-white focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-100">
     <div className="flex flex-wrap gap-1 border-b border-line bg-canvas/70 p-2">
       {tools.map(([command, label, title]) => <button key={command} type="button" title={title} aria-label={title} onMouseDown={(event) => { event.preventDefault(); format(command); }} className="min-w-8 rounded-md border border-line bg-white px-2 py-1 text-xs font-semibold text-ink-soft hover:border-brand-300 hover:text-brand-700">{label}</button>)}
     </div>
     <div
       ref={editor}
-      contentEditable
+      contentEditable={true}
       suppressContentEditableWarning
+      tabIndex={0}
+      spellCheck={true}
       role="textbox"
       aria-label={ariaLabel}
       aria-multiline="true"
       data-placeholder={placeholder}
       style={{ minHeight }}
-      className="rich-editor overflow-y-auto px-3.5 py-3 text-sm leading-6 text-ink outline-none empty:before:pointer-events-none empty:before:text-ink-muted empty:before:content-[attr(data-placeholder)]"
-      onInput={(event) => onChange(sanitizeRichText(event.currentTarget.innerHTML))}
+      className="rich-editor min-w-0 max-w-full cursor-text overflow-x-hidden overflow-y-auto break-words px-3.5 py-3 text-sm leading-6 text-ink outline-none empty:before:pointer-events-none empty:before:text-ink-muted empty:before:content-[attr(data-placeholder)]"
+      onFocus={(event) => ensureCaret(event.currentTarget)}
+      onInput={(event) => emitValue(event.currentTarget)}
+      onPaste={(event) => {
+        event.preventDefault();
+        const clipboardHtml = event.clipboardData.getData('text/html');
+        const clipboardText = event.clipboardData.getData('text/plain');
+        const safeHtml = clipboardHtml
+          ? sanitizeRichText(clipboardHtml)
+          : clipboardText.split(/\r?\n/).map((line) => {
+            const container = document.createElement('div');
+            container.textContent = line;
+            return container.innerHTML;
+          }).join('<br>');
+        document.execCommand('insertHTML', false, safeHtml);
+        emitValue(event.currentTarget);
+      }}
       onBlur={(event) => {
         const cleaned = sanitizeRichText(event.currentTarget.innerHTML);
         if (!richTextToPlain(cleaned)) event.currentTarget.innerHTML = '';

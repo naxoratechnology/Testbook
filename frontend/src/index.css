@@ -59,6 +59,12 @@ body {
   vertical-align: sub;
   font-size: 0.72em;
 }
+.rich-editor,
+.rich-editor * {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 .option-rich-text {
   white-space: normal;
 }
@@ -69,5 +75,17 @@ body {
 }
 .option-rich-text p:not(:last-child)::after,
 .option-rich-text div:not(:last-child)::after {
+  content: ' ';
+}
+.question-rich-text {
+  white-space: normal;
+}
+.question-rich-text p,
+.question-rich-text div {
+  display: inline;
+  margin: 0;
+}
+.question-rich-text p:not(:last-child)::after,
+.question-rich-text div:not(:last-child)::after {
   content: ' ';
 }
