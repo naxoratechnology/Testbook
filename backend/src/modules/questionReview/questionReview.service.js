@@ -46,7 +46,7 @@ async function report(userId, body, role) {
   if (!question) throw Object.assign(new Error('Question not found.'), { statusCode: 404 });
   const filter = { user: userId, source: value.source, sourceId: value.sourceId, testId: value.testId, questionId: value.questionId };
   let saved;
-  try { saved = await Report.findOneAndUpdate(filter, { $setOnInsert: { ...filter, title: result.title, questionText: question.text, reason: value.reason, details: value.details } }, { upsert: true, new: true, runValidators: true }); }
+  try { saved = await Report.findOneAndUpdate(filter, { $setOnInsert: filter, $set: { title: result.title, questionText: question.text, reason: value.reason, details: value.details, status: 'pending' } }, { upsert: true, new: true, runValidators: true }); }
   catch (error) { if (error.code !== 11000) throw error; saved = await Report.findOne(filter); }
   return { _id: saved._id, status: saved.status };
 }

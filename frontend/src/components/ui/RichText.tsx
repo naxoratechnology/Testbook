@@ -6,11 +6,13 @@ export const optionLabelClass = 'w-7 shrink-0 text-center text-base font-medium 
 export const optionContentClass = 'option-rich-text min-w-0 flex-1 text-base font-medium leading-7 sm:text-lg';
 export const explanationTextClass = 'text-base font-normal leading-7 sm:text-lg';
 
-const allowedTags = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'SUP', 'SUB', 'P', 'DIV', 'BR', 'UL', 'OL', 'LI']);
+const allowedTags = new Set(['B', 'STRONG', 'I', 'EM', 'U', 'SUP', 'SUB', 'P', 'DIV', 'BR', 'UL', 'OL', 'LI', 'MATH', 'MROW', 'MI', 'MN', 'MO', 'MSUP', 'MSUB', 'MSUBSUP', 'MFRAC', 'MSQRT', 'MROOT', 'MTEXT']);
 
 export function sanitizeRichText(value: string) {
   if (!value || typeof document === 'undefined') return value || '';
-  const parsed = new DOMParser().parseFromString(`<div>${value}</div>`, 'text/html');
+  const containsRichMarkup = /<\/?(?:b|strong|i|em|u|sup|sub|p|div|br|ul|ol|li)(?:\s|>|\/)/i.test(value);
+  const source = containsRichMarkup ? value : value.replace(/\r\n?/g, '\n').replace(/\n/g, '<br>');
+  const parsed = new DOMParser().parseFromString(`<div>${source}</div>`, 'text/html');
   const root = parsed.body.firstElementChild;
   if (!root) return '';
 
@@ -23,11 +25,20 @@ export function sanitizeRichText(value: string) {
       if (child.nodeType !== Node.ELEMENT_NODE) return;
       const element = child as HTMLElement;
       clean(element);
-      if (!allowedTags.has(element.tagName)) element.replaceWith(...element.childNodes);
+      if (!allowedTags.has(element.tagName.toUpperCase())) element.replaceWith(...element.childNodes);
       else [...element.attributes].forEach((attribute) => element.removeAttribute(attribute.name));
     });
   };
   clean(root);
+
+  const emptyBlock = (element: Element) => ['P', 'DIV'].includes(element.tagName)
+    && !(element.textContent || '').replace(/\u200B/g, '').trim()
+    && [...element.children].every((child) => child.tagName === 'BR');
+  [...root.querySelectorAll('p, div')].forEach((element) => {
+    if (emptyBlock(element) && element.previousElementSibling && emptyBlock(element.previousElementSibling)) element.remove();
+  });
+  while (root.firstElementChild && emptyBlock(root.firstElementChild)) root.firstElementChild.remove();
+  while (root.lastElementChild && emptyBlock(root.lastElementChild)) root.lastElementChild.remove();
   return root.innerHTML;
 }
 
@@ -99,17 +110,38 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = '110p
       onInput={(event) => emitValue(event.currentTarget)}
       onPaste={(event) => {
         event.preventDefault();
+        const scrollLeft = window.scrollX; const scrollTop = window.scrollY;
+        const clipboardText = event.clipboardData.getData('text/plain').replace(/\r\n?/g, '\n');
         const clipboardHtml = event.clipboardData.getData('text/html');
-        const clipboardText = event.clipboardData.getData('text/plain');
-        const safeHtml = clipboardHtml
-          ? sanitizeRichText(clipboardHtml)
-          : clipboardText.split(/\r?\n/).map((line) => {
-            const container = document.createElement('div');
-            container.textContent = line;
-            return container.innerHTML;
-          }).join('<br>');
-        document.execCommand('insertHTML', false, safeHtml);
+        const selection = window.getSelection();
+        if (!selection) return;
+        if (!selection.rangeCount || !selection.anchorNode || !event.currentTarget.contains(selection.anchorNode)) {
+          selection.removeAllRanges();
+          const initialRange = document.createRange();
+          initialRange.selectNodeContents(event.currentTarget);
+          initialRange.collapse(false);
+          selection.addRange(initialRange);
+        }
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        let fragment: DocumentFragment;
+        let lastNode: Node | null = null;
+        if (/<(?:math|sup|sub)(?:\s|>)/i.test(clipboardHtml)) {
+          const template = document.createElement('template');
+          template.innerHTML = sanitizeRichText(clipboardHtml);
+          fragment = template.content;
+          lastNode = fragment.lastChild;
+        } else {
+          fragment = document.createDocumentFragment();
+          clipboardText.split('\n').forEach((line, index) => {
+            if (index) { lastNode = document.createElement('br'); fragment.appendChild(lastNode); }
+            if (line) { lastNode = document.createTextNode(line); fragment.appendChild(lastNode); }
+          });
+        }
+        range.insertNode(fragment);
+        if (lastNode) { range.setStartAfter(lastNode); range.collapse(true); selection.removeAllRanges(); selection.addRange(range); }
         emitValue(event.currentTarget);
+        window.requestAnimationFrame(() => window.scrollTo(scrollLeft, scrollTop));
       }}
       onBlur={(event) => {
         const cleaned = sanitizeRichText(event.currentTarget.innerHTML);
