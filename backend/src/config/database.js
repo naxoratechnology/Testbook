@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 let listenersAttached = false;
 
+// Never queue API queries while MongoDB is unavailable. The API readiness
+// middleware returns a fast 503 response instead of a model-specific timeout.
+mongoose.set('bufferCommands', false);
+
 async function connectDatabase() {
   try {
     const uri = process.env.MONGODB_URI?.trim();
@@ -75,7 +79,16 @@ async function disconnectDatabase() {
   }
 }
 
+function requireDatabase(_request, response, next) {
+  if (mongoose.connection.readyState === 1) return next();
+  return response.status(503).json({
+    success: false,
+    message: 'Database is temporarily unavailable. Please try again shortly.',
+  });
+}
+
 module.exports = {
   connectDatabase,
   disconnectDatabase,
+  requireDatabase,
 };

@@ -21,6 +21,7 @@ const questionReviewRoutes = require('./modules/questionReview/questionReview.ro
 const bannerRoutes = require('./modules/banner/banner.routes');
 const contentImageRoutes = require('./modules/contentImage/contentImage.routes');
 const env = require('./config/env');
+const { requireDatabase } = require('./config/database');
 const app = express();
 app.set('trust proxy', 1);
 
@@ -97,6 +98,7 @@ app.use('/api/v1/auth', rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 }));
+app.use('/api/v1', requireDatabase);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/courses', courseRoutes);
 app.use('/api/v1/test-series', testSeriesRoutes);
@@ -177,12 +179,17 @@ app.use(
   (error, _request, response, _next) => {
     console.error(error);
 
-    const statusCode = error.statusCode || 500;
+    const databaseUnavailable = error?.name === 'MongoServerSelectionError'
+      || error?.name === 'MongooseServerSelectionError'
+      || /buffering timed out|before initial connection is complete/i.test(error?.message || '');
+    const statusCode = databaseUnavailable ? 503 : error.statusCode || 500;
 
     response.status(statusCode).json({
       success: false,
       message:
-        env.nodeEnv === 'production'
+        databaseUnavailable
+          ? 'Database is temporarily unavailable. Please try again shortly.'
+          : env.nodeEnv === 'production'
           ? 'Internal server error'
           : error.message,
     });
