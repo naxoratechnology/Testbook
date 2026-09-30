@@ -1,10 +1,8 @@
 const path = require('path');
-const dns = require('dns');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
-dns.setServers(['8.8.8.8', '1.1.1.1']);
+dotenv.config({ path: path.resolve(__dirname, '../../.env'), override: true });
 
 const { connectDatabase, disconnectDatabase } = require('../config/database');
 const User = require('../modules/auth/auth.model');
