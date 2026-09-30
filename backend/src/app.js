@@ -19,6 +19,7 @@ const notificationRoutes = require('./modules/notification/notification.routes')
 const bookmarkRoutes = require('./modules/bookmark/bookmark.routes');
 const questionReviewRoutes = require('./modules/questionReview/questionReview.routes');
 const bannerRoutes = require('./modules/banner/banner.routes');
+const contentImageRoutes = require('./modules/contentImage/contentImage.routes');
 const env = require('./config/env');
 const app = express();
 app.set('trust proxy', 1);
@@ -111,6 +112,7 @@ app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/bookmarks', bookmarkRoutes);
 app.use('/api/v1/question-review', questionReviewRoutes);
 app.use('/api/v1/banners', bannerRoutes);
+app.use('/api/v1/content-images', contentImageRoutes);
 
 /*
 |--------------------------------------------------------------------------

@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { PageShell, Panel } from '../../components/ui/PageShell';
 import { Badge, Button, Field, Input, Select, btn } from '../../components/ui/Primitives';
 import { ActionMenu } from '../../components/admin/ActionMenu';
-import { RichTextEditor, richTextToPlain } from '../../components/ui/RichText';
+import { RichTextEditor, hasRichTextContent } from '../../components/ui/RichText';
 import { addSeriesTest, fetchAdminSeries, updateSeriesTest } from '../../services/test-series/testSeries.slice';
 import type { SeriesStatus } from '../../services/test-series/testSeries.api';
 import type { AppDispatch, RootState } from '../../store';
@@ -36,7 +36,7 @@ export function AdminTestBuilder() {
   const update = (id: string, patch: Partial<DraftQuestion>) => setQuestions((items) => items.map((item) => item.id === id ? { ...item, ...patch } : item));
   const otherDemoCount = (series?.tests || []).filter((item) => item.isPreview && item._id !== testId).length;
   const validInformation = Boolean(title.trim()) && Number.isInteger(Number(duration)) && Number(duration) > 0;
-  const validQuestions = questions.length > 0 && questions.every((question) => richTextToPlain(question.text) && question.options.length >= 2 && question.options.every((option) => richTextToPlain(option)) && question.correct >= 0 && question.correct < question.options.length && question.marks !== '' && Number.isFinite(Number(question.marks)) && Number(question.marks) >= 0 && question.negative !== '' && Number.isFinite(Number(question.negative)) && Number(question.negative) >= 0);
+  const validQuestions = questions.length > 0 && questions.every((question) => hasRichTextContent(question.text) && question.options.length >= 2 && question.options.every(hasRichTextContent) && question.correct >= 0 && question.correct < question.options.length && question.marks !== '' && Number.isFinite(Number(question.marks)) && Number(question.marks) >= 0 && question.negative !== '' && Number.isFinite(Number(question.negative)) && Number(question.negative) >= 0);
   const save = async () => {
     if (!seriesId || !validInformation || !validQuestions || saving) return;
     setFailure('');

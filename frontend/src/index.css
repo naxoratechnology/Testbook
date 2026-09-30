@@ -65,6 +65,48 @@ body {
   overflow-wrap: anywhere;
   word-break: break-word;
 }
+.ckeditor-field {
+  --ck-color-base-border: #e2e8f0;
+  --ck-color-focus-border: #4f46e5;
+  --ck-border-radius: 0.75rem;
+}
+.ckeditor-field .ck.ck-editor {
+  max-width: 100%;
+}
+.ckeditor-field .ck.ck-toolbar {
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+.ckeditor-field .ck.ck-editor__main > .ck-editor__editable {
+  min-height: var(--ckeditor-min-height, 110px);
+  max-height: 28rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-radius: 0 0 0.75rem 0.75rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.rich-text,
+.rich-text * {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.rich-text figure.image {
+  margin: 1rem auto;
+  text-align: center;
+}
+.rich-text figure.image img,
+.rich-text > img {
+  display: inline-block;
+  max-height: 30rem;
+  width: auto;
+  border-radius: 0.75rem;
+  object-fit: contain;
+}
+.rich-text figcaption {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
 .option-rich-text {
   white-space: normal;
 }

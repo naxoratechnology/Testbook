@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { exams } from '../../data/content';
 import { PageShell, Panel } from '../../components/ui/PageShell';
 import { Button, Field, Input, Select, Textarea, btn } from '../../components/ui/Primitives';
-import { RichTextEditor, richTextToPlain } from '../../components/ui/RichText';
+import { RichTextEditor, hasRichTextContent } from '../../components/ui/RichText';
 import { createCurrentAffairs, fetchAdminCurrentAffairsEntry, updateCurrentAffairs } from '../../services/current-affairs/currentAffairs.slice';
 import type { CurrentAffairsQuestion, CurrentAffairsStatus } from '../../services/current-affairs/currentAffairs.api';
 import type { AppDispatch, RootState } from '../../store';
@@ -24,7 +24,7 @@ export function AdminCurrentAffairsForm() {
   useEffect(() => { if (entryId && current?._id === entryId) { setDraft({ date: current.date.slice(0, 10), title: current.title, exam: current.exam, highlights: current.highlights.join('\n'), status: current.status, file: null }); setQuestions(current.questions.length ? current.questions.map((question) => ({ ...question, key: question._id || `question-${sequence++}` })) : [blankQuestion()]); } }, [entryId, current]);
   const set = (key: keyof Draft, value: string | File | null) => setDraft((item) => ({ ...item, [key]: value } as Draft));
   const updateQuestion = (key: string, patch: Partial<Question>) => setQuestions((items) => items.map((item) => item.key === key ? { ...item, ...patch } : item));
-  const validQuestions = questions.every((question) => richTextToPlain(question.text) && question.options.every((option) => richTextToPlain(option)) && question.correctAnswer >= 0 && question.correctAnswer < question.options.length);
+  const validQuestions = questions.every((question) => hasRichTextContent(question.text) && question.options.every(hasRichTextContent) && question.correctAnswer >= 0 && question.correctAnswer < question.options.length);
   const questionPayload = () => questions.map(({ key: _key, _id: _id, ...question }) => question);
   const submit = async (event: React.FormEvent) => { event.preventDefault(); if (!validQuestions) return; const payload = { date: draft.date, title: draft.title, exam: draft.exam, highlights: draft.highlights.split('\n').map((item) => item.trim()).filter(Boolean), questions: questionPayload(), status: draft.status }; if (entryId) await dispatch(updateCurrentAffairs({ id: entryId, payload })).unwrap(); else { if (!draft.file) return; await dispatch(createCurrentAffairs({ ...payload, file: draft.file })).unwrap(); } navigate('/admin/current-affairs'); };
 
