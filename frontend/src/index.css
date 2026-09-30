@@ -113,3 +113,17 @@ body {
 .question-rich-text {
   white-space: normal;
 }
+.question-rich-text figure.image,
+.option-rich-text figure.image {
+  margin-left: 0;
+  margin-right: 0;
+  text-align: left;
+}
+.question-rich-text > :first-child,
+.option-rich-text > :first-child {
+  margin-top: 0;
+}
+.question-rich-text > :last-child,
+.option-rich-text > :last-child {
+  margin-bottom: 0;
+}

@@ -5,8 +5,10 @@ export type SeriesStatus = 'draft' | 'published' | 'unpublished';
 export type SeriesKind = string;
 export interface SeriesQuestion { _id?: string; text: string; options: string[]; correctAnswer: number; explanation: string; marks: number; negativeMarks: number }
 export interface PublicSeriesQuestion extends Omit<SeriesQuestion, 'correctAnswer' | 'explanation'> { _id: string; correctAnswer?: number; explanation?: string }
-export interface PublicSeriesTest extends Omit<SeriesTest, 'questions'> { questions: PublicSeriesQuestion[] }
+export interface PublicSeriesTest extends Omit<SeriesTest, 'questions'> { questionCount: number }
 export interface PublicTestSeries extends Omit<AdminTestSeries, 'tests'> { purchased: boolean; tests: PublicSeriesTest[] }
+export interface PublicTestDetail { series: Pick<AdminTestSeries, '_id' | 'title' | 'languages'>; test: Omit<SeriesTest, 'questions'> & { questions: PublicSeriesQuestion[] } }
+export interface AdminTestEditorDetail { series: Pick<AdminTestSeries, '_id' | 'title' | 'access' | 'subjects'> & { previewCount: number }; test: SeriesTest | null }
 export interface AttemptResult { _id: string; series: string; test: string; testTitle: string; answers: Record<string, number>; score: number; correct: number; incorrect: number; unanswered: number; accuracy: number; totalMarks: number; submittedAt: string; questions: SeriesQuestion[] }
 export interface SeriesTest { _id: string; title: string; subject?: string; duration: number; questions: SeriesQuestion[]; status: SeriesStatus; isPreview?: boolean; createdAt: string }
 export interface AdminTestSeries { thumbnail?: string; _id: string; title: string; description: string; exam: string; kind: SeriesKind; access: 'free' | 'paid'; price: number; difficulty: string; languages: string; subjects?: string[]; tests: SeriesTest[]; status: SeriesStatus; createdAt: string }
@@ -28,11 +30,13 @@ export const testSeriesApiService = {
   removeThumbnail: (id: string) => api.delete(`/test-series/${id}/thumbnail`),
   uploadThumbnail: (id: string, file: File) => { const data = new FormData(); data.append('thumbnail', file); return api.post(`/test-series/${id}/thumbnail`, data); },
   listPublic: (params?: { exam?: string; access?: string }) => api.get('/test-series', { params }), getPublic: (id: string) => api.get(`/test-series/${id}`),
+  getPublicTest: (seriesId: string, testId: string) => api.get<{ success: boolean; data: PublicTestDetail }>(`/test-series/${seriesId}/tests/${testId}`),
   checkout: (id: string) => api.post(`/test-series/${id}/checkout`),
   verifyCheckout: (id: string, payload: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => api.post(`/test-series/${id}/checkout/verify`, payload),
   purchase: (id: string) => api.post(`/test-series/${id}/purchase`), attempt: (seriesId: string, testId: string, answers: Record<string, number | null>) => api.post(`/test-series/${seriesId}/tests/${testId}/attempts`, { answers }),
   results: (id: string) => api.get(`/test-series/${id}/results`),
   listAdmin: () => api.get('/test-series/admin'), getAdmin: (id: string) => api.get(`/test-series/admin/${id}`),
+  getAdminEditor: (id: string, testId?: string) => api.get<{ success: boolean; data: AdminTestEditorDetail }>(`/test-series/admin/${id}/editor`, { params: testId ? { testId } : undefined }),
   create: (payload: SeriesPayload) => api.post('/test-series', payload), update: (id: string, payload: SeriesPayload) => api.patch(`/test-series/${id}`, payload),
   remove: (id: string) => api.delete(`/test-series/${id}`), addTest: (id: string, payload: TestPayload) => api.post(`/test-series/${id}/tests`, payload),
 };

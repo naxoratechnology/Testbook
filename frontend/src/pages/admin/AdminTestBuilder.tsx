@@ -6,8 +6,8 @@ import { PageShell, Panel } from '../../components/ui/PageShell';
 import { Badge, Button, Field, Input, Select, btn } from '../../components/ui/Primitives';
 import { ActionMenu } from '../../components/admin/ActionMenu';
 import { RichTextEditor, hasRichTextContent } from '../../components/ui/RichText';
-import { addSeriesTest, fetchAdminSeries, updateSeriesTest } from '../../services/test-series/testSeries.slice';
-import type { SeriesStatus } from '../../services/test-series/testSeries.api';
+import { addSeriesTest, updateSeriesTest } from '../../services/test-series/testSeries.slice';
+import { testSeriesApiService, type AdminTestEditorDetail, type SeriesStatus } from '../../services/test-series/testSeries.api';
 import type { AppDispatch, RootState } from '../../store';
 
 interface DraftQuestion { id: string; _id?: string; text: string; options: string[]; correct: number; explanation: string; marks: string; negative: string }
@@ -18,14 +18,19 @@ export function AdminTestBuilder() {
   const { seriesId = '', testId } = useParams(); const [search] = useSearchParams(); const editing = Boolean(testId);
   const navigate = useNavigate(); const dispatch = useDispatch<AppDispatch>();
   const back = search.get('from') === 'reports' ? '/admin/question-reports' : `/admin/test-series/${seriesId}`;
-  const { current, loading, saving, error } = useSelector((state: RootState) => state.testSeries);
-  const series = current?._id === seriesId ? current : null; const test = series?.tests.find((item) => item._id === testId);
+  const { saving, error } = useSelector((state: RootState) => state.testSeries);
+  const [editorData, setEditorData] = useState<AdminTestEditorDetail | null>(null); const [loading, setLoading] = useState(true);
+  const series = editorData?.series || null; const test = editorData?.test || undefined;
   const loaded = useRef(''); const [failure, setFailure] = useState('');
   const [title, setTitle] = useState(''); const [subject, setSubject] = useState(''); const [duration, setDuration] = useState('60'); const [status, setStatus] = useState<SeriesStatus>('draft');
   const [isPreview, setIsPreview] = useState(false);
   const [questions, setQuestions] = useState<DraftQuestion[]>(() => [blankQuestion()]);
-  useEffect(() => { loaded.current = ''; setFailure(''); setTitle(''); setSubject(''); setDuration('60'); setStatus('draft'); setIsPreview(false); setQuestions([blankQuestion()]); }, [seriesId, testId]);
-  useEffect(() => { if (seriesId) void dispatch(fetchAdminSeries(seriesId)); }, [seriesId, dispatch]);
+  useEffect(() => {
+    let active = true;
+    loaded.current = ''; setFailure(''); setTitle(''); setSubject(''); setDuration('60'); setStatus('draft'); setIsPreview(false); setQuestions([blankQuestion()]); setEditorData(null); setLoading(true);
+    testSeriesApiService.getAdminEditor(seriesId, testId).then(({ data }) => { if (active) setEditorData(data.data); }).catch((requestError) => { if (active) setFailure(requestError?.response?.data?.message || 'Unable to load test.'); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [seriesId, testId]);
   useEffect(() => {
     if (!test || loaded.current === test._id) return;
     loaded.current = test._id; setTitle(test.title); setSubject(test.subject || ''); setDuration(String(test.duration)); setStatus(test.status); setIsPreview(Boolean(test.isPreview));
@@ -34,7 +39,7 @@ export function AdminTestBuilder() {
     if (target) window.setTimeout(() => document.getElementById(`question-${target}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100);
   }, [test, search]);
   const update = (id: string, patch: Partial<DraftQuestion>) => setQuestions((items) => items.map((item) => item.id === id ? { ...item, ...patch } : item));
-  const otherDemoCount = (series?.tests || []).filter((item) => item.isPreview && item._id !== testId).length;
+  const otherDemoCount = Math.max(0, (series?.previewCount || 0) - (test?.isPreview ? 1 : 0));
   const validInformation = Boolean(title.trim()) && Number.isInteger(Number(duration)) && Number(duration) > 0;
   const validQuestions = questions.length > 0 && questions.every((question) => hasRichTextContent(question.text) && question.options.length >= 2 && question.options.every(hasRichTextContent) && question.correct >= 0 && question.correct < question.options.length && question.marks !== '' && Number.isFinite(Number(question.marks)) && Number(question.marks) >= 0 && question.negative !== '' && Number.isFinite(Number(question.negative)) && Number(question.negative) >= 0);
   const save = async () => {
@@ -46,7 +51,7 @@ export function AdminTestBuilder() {
     catch (error) { setFailure(String(error)); }
   };
   if (loading) return <PageShell title={editing ? 'Edit test & questions' : 'Add test'} width="max-w-none"><Panel>Loading test...</Panel></PageShell>;
-  if (!series || (editing && !test)) return <PageShell title="Test not found" width="max-w-none"><p className="mb-4 text-sm text-red-600">{error || 'Select an available test series.'}</p><Link to="/admin/test-series" className={btn('secondary', 'md')}>Back to test series</Link></PageShell>;
+  if (!series || (editing && !test)) return <PageShell title="Test not found" width="max-w-none"><p className="mb-4 text-sm text-red-600">{failure || error || 'Select an available test series.'}</p><Link to="/admin/test-series" className={btn('secondary', 'md')}>Back to test series</Link></PageShell>;
   return <PageShell title={editing ? 'Edit test & questions' : 'Add test'} subtitle={`Test series: ${series.title}`} width="max-w-none">
     <Link to={back} className="mb-5 inline-block text-sm text-brand-700">{search.get('from') === 'reports' ? '← Back to reported questions' : '← Back to tests'}</Link>
     <form className="space-y-5" onSubmit={(event) => { event.preventDefault(); void save(); }}>

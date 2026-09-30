@@ -5,7 +5,9 @@ const run = (handler) => (req, res, next) => Promise.resolve(handler(req, res)).
 const create = run(async (req, res) => { const { value, errors } = validation.series(req.body); if (Object.keys(errors).length) return res.status(400).json({ success: false, message: 'Validation failed.', errors }); return res.status(201).json({ success: true, data: { series: await service.create(value, req.auth.sub) } }); });
 const list = run(async (req, res) => res.json({ success: true, data: { series: await service.list(req.query, false, req.auth?.sub) } }));
 const adminList = run(async (req, res) => res.json({ success: true, data: { series: await service.list(req.query, true) } }));
+const adminEditor = run(async (req, res) => res.json({ success: true, data: await service.findAdminEditor(req.params.id, req.query.testId) }));
 const detail = run(async (req, res) => res.json({ success: true, data: { series: await service.find(req.params.id, false, req.auth?.sub) } }));
+const testDetail = run(async (req, res) => res.json({ success: true, data: await service.findPublicTest(req.params.seriesId, req.params.testId, req.auth?.sub) }));
 const checkout = run(async (req, res) => res.json({ success: true, data: await payment.checkout(req.auth.sub, req.params.id) }));
 const verifyPayment = run(async (req, res) => res.json({ success: true, data: { purchase: await payment.verify(req.auth.sub, req.params.id, req.body) } }));
 const adminDetail = run(async (req, res) => res.json({ success: true, data: { series: await service.find(req.params.id, true) } }));
@@ -15,7 +17,7 @@ const addTest = run(async (req, res) => { const { value, errors } = validation.t
 const purchase = run(async (req, res) => res.status(201).json({ success: true, data: { purchase: await service.purchase(req.auth.sub, req.params.id) } }));
 const attempt = run(async (req, res) => res.status(201).json({ success: true, data: { result: await service.attempt(req.auth.sub, req.params.seriesId, req.params.testId, req.body.answers || {}) } }));
 const results = run(async (req, res) => res.json({ success: true, data: { results: await service.results(req.auth.sub, req.params.id) } }));
-module.exports = { create, list, adminList, detail, adminDetail, update, remove, addTest, purchase, attempt, results, checkout, verifyPayment };
+module.exports = { create, list, adminList, adminEditor, detail, testDetail, adminDetail, update, remove, addTest, purchase, attempt, results, checkout, verifyPayment };
 
 const { saveThumbnail, removeThumbnail } = require('../../utils/thumbnailUpload');
 const ThumbnailModel = require('./testSeries.model');
