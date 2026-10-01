@@ -26,6 +26,7 @@ export function sanitizeRichText(value: string) {
   const parsed = new DOMParser().parseFromString(`<div>${source}</div>`, 'text/html');
   const root = parsed.body.firstElementChild;
   if (!root) return '';
+  normalizeWordMath(root);
 
   const clean = (node: Node) => {
     [...node.childNodes].forEach((child) => {
@@ -88,6 +89,47 @@ function QuestionImageUploadPlugin(editor: ClassicEditor) {
   repository.createUploadAdapter = (loader) => new QuestionImageUploadAdapter(loader);
 }
 
+function elementName(element: Element) {
+  return element.tagName.toLowerCase().split(':').pop() || '';
+}
+
+function normalizeWordMath(root: ParentNode) {
+  const elements = [...root.querySelectorAll('*')];
+  elements.forEach((element) => {
+    if (elementName(element) !== 'span') return;
+    const style = (element.getAttribute('style') || '').toLowerCase();
+    const raised = /(?:vertical-align\s*:\s*super|mso-text-raise\s*:\s*(?!0(?:\.0+)?pt)\d+(?:\.\d+)?pt|top\s*:\s*-\d+(?:\.\d+)?(?:pt|px))/.test(style);
+    const lowered = /(?:vertical-align\s*:\s*sub|mso-text-raise\s*:\s*-\d+(?:\.\d+)?pt|top\s*:\s*\d+(?:\.\d+)?(?:pt|px))/.test(style);
+    if (!raised && !lowered) return;
+    const replacement = document.createElement(raised ? 'sup' : 'sub');
+    replacement.append(...element.childNodes);
+    element.replaceWith(replacement);
+  });
+
+  [...root.querySelectorAll('*')].reverse().forEach((element) => {
+    const name = elementName(element);
+    if (!['ssup', 'ssub', 'ssubsup'].includes(name)) return;
+    const children = [...element.children];
+    const part = (partName: string) => children.find((child) => elementName(child) === partName)?.textContent || '';
+    const fragment = document.createDocumentFragment();
+    fragment.append(document.createTextNode(part('e')));
+    if (name === 'ssub' || name === 'ssubsup') { const sub = document.createElement('sub'); sub.textContent = part('sub'); fragment.append(sub); }
+    if (name === 'ssup' || name === 'ssubsup') { const sup = document.createElement('sup'); sup.textContent = part('sup'); fragment.append(sup); }
+    element.replaceWith(fragment);
+  });
+}
+
+function WordMathPastePlugin(editor: ClassicEditor) {
+  editor.editing.view.document.on('clipboardInput', (_event, clipboardData) => {
+    const data = clipboardData as unknown as { dataTransfer: { getData: (type: string) => string }; content?: unknown };
+    const html = data.dataTransfer.getData('text/html');
+    if (!html || !/(class=["']?Mso|mso-|<m:|vertical-align\s*:\s*(?:super|sub)|mso-text-raise)/i.test(html)) return;
+    const parsed = new DOMParser().parseFromString(html, 'text/html');
+    normalizeWordMath(parsed.body);
+    data.content = editor.data.htmlProcessor.toView(parsed.body.innerHTML);
+  }, { priority: 'highest' });
+}
+
 export function RichTextEditor({ value, onChange, placeholder, minHeight = '110px', ariaLabel }: { value: string; onChange: (value: string) => void; placeholder?: string; minHeight?: string; ariaLabel?: string }) {
   return <div className="ckeditor-field min-w-0 max-w-full" style={{ '--ckeditor-min-height': minHeight } as CSSProperties} aria-label={ariaLabel}>
     <CKEditor
@@ -99,7 +141,7 @@ export function RichTextEditor({ value, onChange, placeholder, minHeight = '110p
         toolbar: ['undo', 'redo', '|', 'bold', 'italic', 'underline', 'superscript', 'subscript', '|', 'bulletedList', 'numberedList', '|', 'uploadImage'],
         image: { toolbar: ['imageTextAlternative', 'toggleImageCaption', '|', 'imageStyle:inline', 'imageStyle:block', 'imageStyle:side', '|', 'resizeImage'] },
         placeholder,
-        extraPlugins: [QuestionImageUploadPlugin],
+        extraPlugins: [QuestionImageUploadPlugin, WordMathPastePlugin],
       }}
       onChange={(_event, editor) => {
         const data = editor.getData();
