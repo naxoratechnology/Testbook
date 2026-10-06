@@ -8,15 +8,15 @@ import { Logo } from './Logo';
 
 const publicLinks = [
 { to: '/', label: 'Home' },
+{ to: '/about', label: 'About' },
 { to: '/courses', label: 'Courses' },
 { to: '/test-series', label: 'Test Series' },
 { to: '/notes', label: 'Notes' },
-{ to: '/current-affairs', label: 'Current Affairs' },
+{ to: '/current-affairs', label: 'CA', fullLabel: 'Current Affairs' },
 { to: '/notices', label: 'Notices' },
-{ to: '/previous-papers', label: 'Previous Papers' },
+{ to: '/previous-papers', label: 'PYQ', fullLabel: 'Previous Year Papers' },
 { to: '/syllabus', label: 'Syllabus' },
-{ to: '/miscellaneous', label: 'Miscellaneous' },
-{ to: '/about', label: 'About' }];
+{ to: '/miscellaneous', label: 'Misc', fullLabel: 'Miscellaneous' }];
 
 
 const studentLinks = [{ to: '/dashboard', label: 'Dashboard' }, ...publicLinks.slice(1)];
@@ -31,18 +31,18 @@ export function Navbar() {
   const links = user?.role === 'student' ? studentLinks : publicLinks;
 
   const linkClass = ({ isActive }: {isActive: boolean;}) =>
-  `rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150 ease-smooth ${
-  isActive ? 'bg-brand-50 text-brand-700' : 'text-ink-soft hover:text-ink'}`;
+  `whitespace-nowrap rounded-lg px-2 py-2 text-[13px] font-medium transition-colors duration-150 ease-smooth xl:px-3 xl:text-sm ${
+  isActive ? 'bg-[#fff1e8] text-[#f75c01] shadow-sm' : 'text-ink-soft hover:text-ink'}`;
 
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-16 w-full max-w-none items-center gap-2 px-3 sm:px-6 lg:grid lg:grid-cols-[1fr_auto_1fr] lg:gap-3 lg:px-6">
+      <div className="mx-auto flex h-16 w-full max-w-none items-center gap-2 px-3 sm:px-6 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-2 lg:px-4 xl:gap-3 xl:px-6">
         <Logo />
 
         <nav aria-label="Main" className="hidden items-center justify-center gap-0.5 lg:flex">
           {links.map((link) =>
-          <NavLink key={link.to} to={link.to} className={linkClass} end={link.to === '/'}>
+          <NavLink key={link.to} to={link.to} title={link.fullLabel || link.label} aria-label={link.fullLabel || link.label} className={linkClass} end={link.to === '/'}>
               {link.label}
             </NavLink>
           )}
@@ -75,7 +75,7 @@ export function Navbar() {
               className="flex items-center gap-2 rounded-xl border border-line py-1 pl-1 pr-2 transition-colors duration-150 ease-smooth hover:bg-canvas">
               
                 <Avatar name={user.name} src={user.avatar} />
-                <span className="hidden text-sm font-medium text-ink sm:block">{user.name.split(' ')[0]}</span>
+                <span className="hidden text-sm font-medium text-ink xl:block">{user.name.split(' ')[0]}</span>
                 <ChevronDownIcon className="h-4 w-4 text-ink-muted" />
               </button>
               {menuOpen &&
@@ -136,6 +136,8 @@ export function Navbar() {
           <NavLink
             key={link.to}
             to={link.to}
+            title={link.fullLabel || link.label}
+            aria-label={link.fullLabel || link.label}
             end={link.to === '/'}
             onClick={() => setMobileOpen(false)}
             className={linkClass}>
