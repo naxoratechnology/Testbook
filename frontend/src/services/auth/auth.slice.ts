@@ -4,7 +4,7 @@ import { User } from '../../types';
 import { authApiService, changePasswordSchema, loginSchema, registerSchema, ChangePasswordPayload, LoginPayload, RegisterPayload } from './auth.api';
 
 type AuthState = { user: User | null; loading: boolean; error: string | null };
-const initialState: AuthState = { user: null, loading: false, error: null };
+const initialState: AuthState = { user: null, loading: true, error: null };
 const mapUser = (user: Omit<User, 'avatar'>): User => ({ ...user, avatar: '' });
 const errorMessage = (error: unknown) => axios.isAxiosError(error) ? error.response?.data?.message || 'Request failed.' : error instanceof Error ? error.message : 'Request failed.';
 

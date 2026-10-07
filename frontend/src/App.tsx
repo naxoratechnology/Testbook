@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { AuthProvider } from './contexts/AuthContext';
 import { ViewerProvider } from './contexts/ViewerContext';
 import { StudentLayout } from './components/layout/StudentLayout';
@@ -56,6 +57,15 @@ import { AdminStudents } from './pages/admin/AdminStudents';
 import { AdminStudentDetail } from './pages/admin/AdminStudentDetail';
 import { AdminSettings } from './pages/admin/AdminSettings';
 import { AdminBanners } from './pages/admin/AdminBanners';
+import type { RootState } from './store';
+
+function RequireLogin({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useSelector((state: RootState) => state.auth);
+  const location = useLocation();
+  if (loading) return <div className="flex min-h-[50vh] items-center justify-center text-sm text-ink-muted">Loading...</div>;
+  if (!user) return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
+  return children;
+}
 
 export function App() {
   return (
@@ -67,9 +77,9 @@ export function App() {
               <Route path="/" element={<Home />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/courses" element={<Courses />} />
-              <Route path="/courses/:courseId" element={<CourseDetail />} />
+              <Route path="/courses/:courseId" element={<RequireLogin><CourseDetail /></RequireLogin>} />
               <Route path="/test-series" element={<TestSeriesPage />} />
-              <Route path="/test-series/:seriesId" element={<TestSeriesDetail />} />
+              <Route path="/test-series/:seriesId" element={<RequireLogin><TestSeriesDetail /></RequireLogin>} />
               <Route path="/test-series/:seriesId/tests/:testId/result" element={<TestResult />} />
               <Route path="/test-series/:seriesId/tests/:testId/solutions" element={<Solutions />} />
               <Route path="/notes" element={<Notes />} />
