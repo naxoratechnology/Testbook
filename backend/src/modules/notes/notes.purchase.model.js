@@ -1,0 +1,4 @@
+const mongoose = require('mongoose');
+const schema = new mongoose.Schema({ user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true }, notes: { type: mongoose.Schema.Types.ObjectId, ref: 'Notes', required: true, index: true }, status: { type: String, enum: ['pending', 'active', 'refunded'], default: 'pending' }, amount: { type: Number, default: 0 }, currency: { type: String, default: 'INR' }, razorpayOrderId: { type: String, default: '', index: true }, razorpayPaymentId: { type: String, default: '' }, purchasedAt: { type: Date, default: null }, accessSource: { type: String, enum: ['payment', 'admin'], default: 'payment' }, grantedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null } }, { timestamps: true, versionKey: false });
+schema.index({ user: 1, notes: 1 }, { unique: true });
+module.exports = mongoose.model('NotesPurchase', schema);

@@ -1,12 +1,17 @@
 const router = require('express').Router();
 const controller = require('./auth.controller');
 const { requireAuth } = require('./auth.middleware');
+const { identityDocumentUpload } = require('./auth.upload');
 router.post('/register', controller.register);
 router.post('/login', controller.login);
 router.post('/forgot-password', controller.forgotPassword);
 router.post('/reset-password', controller.resetPassword);
 router.post('/refresh', controller.refresh);
 router.get('/me', requireAuth, controller.me);
+router.post('/registration/verify-otp', requireAuth, controller.verifyRegistrationOtp);
+router.post('/registration/resend-otp', requireAuth, controller.resendRegistrationOtp);
+router.post('/identity-document', requireAuth, identityDocumentUpload.single('document'), controller.uploadIdentityDocument);
 router.patch('/password', requireAuth, controller.changePassword);
+router.patch('/profile', requireAuth, controller.updateProfile);
 router.post('/logout', controller.logout);
 module.exports = router;

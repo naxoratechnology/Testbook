@@ -22,6 +22,10 @@ export const restoreSession = createAsyncThunk<User, void, { rejectValue: string
   catch (error) { return rejectWithValue(errorMessage(error)); }
 });
 export const changePassword = createAsyncThunk<string, ChangePasswordPayload, { rejectValue: string }>('auth/changePassword', async (data, { rejectWithValue }) => { try { await changePasswordSchema.validate(data, { abortEarly: false }); await authApiService.changePassword({ currentPassword: data.currentPassword, newPassword: data.newPassword }); return 'Password updated successfully.'; } catch (error) { return rejectWithValue(errorMessage(error)); } });
+export const updateProfile = createAsyncThunk<User, { name: string; email: string; mobile: string; targetExam: string }, { rejectValue: string }>('auth/updateProfile', async (data, { rejectWithValue }) => { try { return mapUser((await authApiService.updateProfile(data)).data.data.user); } catch (error) { return rejectWithValue(errorMessage(error)); } });
+export const verifyRegistrationOtp = createAsyncThunk<User, string, { rejectValue: string }>('auth/verifyRegistrationOtp', async (otp, { rejectWithValue }) => { try { return mapUser((await authApiService.verifyRegistrationOtp(otp)).data.data.user); } catch (error) { return rejectWithValue(errorMessage(error)); } });
+export const resendRegistrationOtp = createAsyncThunk<void, void, { rejectValue: string }>('auth/resendRegistrationOtp', async (_, { rejectWithValue }) => { try { await authApiService.resendRegistrationOtp(); } catch (error) { return rejectWithValue(errorMessage(error)); } });
+export const uploadIdentityDocument = createAsyncThunk<User, File, { rejectValue: string }>('auth/uploadIdentityDocument', async (file, { rejectWithValue }) => { try { return mapUser((await authApiService.uploadIdentityDocument(file)).data.data.user); } catch (error) { return rejectWithValue(errorMessage(error)); } });
 
 const slice = createSlice({
   name: 'auth',
@@ -40,7 +44,12 @@ const slice = createSlice({
     .addCase(restoreSession.rejected, (state) => { state.loading = false; state.user = null; })
     .addCase(changePassword.pending, (state) => { state.loading = true; state.error = null; })
     .addCase(changePassword.fulfilled, (state) => { state.loading = false; })
-    .addCase(changePassword.rejected, (state, action) => { state.loading = false; state.error = action.payload || 'Unable to update password.'; }),
+    .addCase(changePassword.rejected, (state, action) => { state.loading = false; state.error = action.payload || 'Unable to update password.'; })
+    .addCase(verifyRegistrationOtp.fulfilled, (state, action) => { state.user = action.payload; })
+    .addCase(uploadIdentityDocument.fulfilled, (state, action) => { state.user = action.payload; })
+    .addCase(updateProfile.pending, (state) => { state.loading = true; state.error = null; })
+    .addCase(updateProfile.fulfilled, (state, action) => { state.loading = false; state.user = action.payload; })
+    .addCase(updateProfile.rejected, (state, action) => { state.loading = false; state.error = action.payload || 'Unable to update profile.'; }),
 });
 export const { clearError } = slice.actions;
 export default slice.reducer;

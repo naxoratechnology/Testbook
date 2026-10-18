@@ -8,6 +8,10 @@ export interface User {
   role: Role;
   targetExam: string;
   avatar: string;
+  emailVerified: boolean;
+  identityVerificationStatus: 'not_submitted' | 'pending' | 'approved' | 'rejected';
+  identityDocumentName: string;
+  identityVerificationNote: string;
 }
 
 export type PriceType = 'free' | 'paid';

@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { AppNotification, Role, User } from '../types';
 import { useDispatch, useSelector } from 'react-redux';
-import { login as authLogin, register as authRegister, logout as authLogout, restoreSession } from '../services/auth/auth.slice';
+import { login as authLogin, register as authRegister, logout as authLogout, restoreSession, verifyRegistrationOtp as verifyOtpAction, resendRegistrationOtp as resendOtpAction, uploadIdentityDocument as uploadDocumentAction } from '../services/auth/auth.slice';
 import type { AppDispatch, RootState } from '../store';
 import { ApiNotification, notificationsApiService } from '../services/notifications/notifications.api';
 import { authApiService } from '../services/auth/auth.api';
@@ -15,6 +15,9 @@ interface AuthValue {
   login: (identifier: string, password: string) => Promise<Role>;
   register: (data: AuthData) => Promise<Role>;
   logout: () => Promise<void>;
+  verifyRegistrationOtp: (otp: string) => Promise<void>;
+  resendRegistrationOtp: () => Promise<void>;
+  uploadIdentityDocument: (file: File) => Promise<void>;
   notifications: AppNotification[];
   unreadCount: number;
   markRead: (id: string) => void;
@@ -49,9 +52,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     await dispatch(authLogout()).unwrap();
   }, [request]);
+  const verifyRegistrationOtp = useCallback(async (otp: string) => { await dispatch(verifyOtpAction(otp)).unwrap(); }, [dispatch]);
+  const resendRegistrationOtp = useCallback(async () => { await dispatch(resendOtpAction()).unwrap(); }, [dispatch]);
+  const uploadIdentityDocument = useCallback(async (file: File) => { await dispatch(uploadDocumentAction(file)).unwrap(); }, [dispatch]);
   const markRead = useCallback((id: string) => { setItems((prev) => prev.map((item) => item.id === id ? { ...item, read: true } : item)); notificationsApiService.markRead(id).catch(() => undefined); }, []);
   const markAllRead = useCallback(() => { setItems((prev) => prev.map((item) => ({ ...item, read: true }))); notificationsApiService.markAllRead().catch(() => undefined); }, []);
-  const value = useMemo(() => ({ user, login, register, logout, notifications: items, unreadCount: items.filter((item) => !item.read).length, markRead, markAllRead }), [user, login, register, logout, items, markRead, markAllRead]);
+  const value = useMemo(() => ({ user, login, register, logout, verifyRegistrationOtp, resendRegistrationOtp, uploadIdentityDocument, notifications: items, unreadCount: items.filter((item) => !item.read).length, markRead, markAllRead }), [user, login, register, logout, verifyRegistrationOtp, resendRegistrationOtp, uploadIdentityDocument, items, markRead, markAllRead]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 export function useAuth() { const context = useContext(AuthContext); if (!context) throw new Error('useAuth must be used inside AuthProvider'); return context; }

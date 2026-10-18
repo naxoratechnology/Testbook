@@ -7,7 +7,7 @@ const statusSchema = {
 const accessSchema = {
   safeParse(payload) {
     const type = String(payload?.type || ''); const contentId = String(payload?.contentId || '');
-    if (!['course', 'test-series'].includes(type) || !/^[a-f\d]{24}$/i.test(contentId)) return { success: false };
+    if (!['course', 'test-series', 'notes'].includes(type) || !/^[a-f\d]{24}$/i.test(contentId)) return { success: false };
     return { success: true, data: { type, contentId } };
   },
 };

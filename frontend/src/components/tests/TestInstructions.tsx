@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { UserIcon } from 'lucide-react';
 import { Button } from '../ui/Primitives';
 
 export interface AttemptQuestion { _id: string; text: string; options: string[]; marks?: number; negativeMarks?: number }
 export function CandidatePhoto({ src, name }: { src?: string; name: string }) {
-  const [failed, setFailed] = useState(false);
-  useEffect(() => setFailed(false), [src]);
-  return <div className="flex flex-col items-center gap-3"><div className="flex h-36 w-32 items-center justify-center overflow-hidden rounded-xl border border-line bg-slate-50">{src && !failed ? <img src={src} onError={() => setFailed(true)} alt={`${name}'s test photo`} className="h-full w-full object-cover" /> : <UserIcon aria-label="Default user photo" className="h-24 w-24 text-slate-400" />}</div><p className="text-center text-sm font-semibold text-ink">{name}</p></div>;
+  const parts = name.trim().split(/\s+/).filter(Boolean); const initials = `${parts[0]?.[0] || 'S'}${parts.length > 1 ? parts[parts.length - 1][0] : ''}`.toUpperCase();
+  return <div className="candidate-identity flex items-center justify-center gap-3"><span aria-label={`${name} initials`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white">{initials}</span><p className="min-w-0 truncate text-sm font-semibold text-ink">{name}</p></div>;
 }
 export const questionStatusClasses = { unanswered: 'bg-blue-600 text-white', answered: 'bg-emerald-600 text-white', review: 'bg-red-500 text-white', answeredReview: 'bg-yellow-300 text-slate-900' };
 

@@ -3,6 +3,7 @@ const Razorpay = require('razorpay');
 const Purchase = require('./previousPaper.purchase.model');
 const Settings = require('./previousPaper.settings.model');
 const DEFAULT_PRICE = 199;
+const { requirePurchaseVerification } = require('../../utils/purchaseVerification');
 const fail = (message, statusCode) => Object.assign(new Error(message), { statusCode });
 async function getPrice() { const settings = await Settings.findById('global-pass').lean(); return settings?.price ?? DEFAULT_PRICE; }
 async function updatePrice(price, access = 'paid') {
@@ -22,6 +23,7 @@ async function checkout(userId) {
   if (await hasAccess(userId)) return { purchased: true };
   const price = await getPrice();
   if (price === 0) return { free: true, purchased: true };
+  await requirePurchaseVerification(userId);
   const order = await client().orders.create({ amount: Math.round(price * 100), currency: 'INR', receipt: `papers_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`, notes: { userId: String(userId), product: 'all-previous-papers' } });
   await Purchase.create({ user: userId, amount: price, razorpayOrderId: order.id });
   return { order, keyId: process.env.RAZORPAY_KEY_ID };

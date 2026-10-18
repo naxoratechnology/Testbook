@@ -127,3 +127,35 @@ body {
 .option-rich-text > :last-child {
   margin-bottom: 0;
 }
+/* Question numbers are generated from display order and cannot be edited. */
+.admin-question-list {
+  counter-reset: admin-question;
+}
+
+.admin-question-list [id^='question-'].scroll-mt-24 {
+  counter-increment: admin-question;
+}
+
+.admin-question-list [id^='question-'].scroll-mt-24 > div:first-child > h3::after {
+  content: ' ' counter(admin-question);
+}
+
+/* Candidate photos are not collected; tests use a compact initials identity. */
+aside:has(> .candidate-identity) > p,
+aside:has(> .candidate-identity) > label,
+aside:has(> .candidate-identity) > .candidate-identity ~ button {
+  display: none;
+}
+
+.fixed.inset-0 aside > .mt-4.grid.grid-cols-5 > button {
+  height: 2.25rem;
+}
+
+/* The instruction page does not need a candidate identity column. */
+.min-h-screen.bg-canvas section > div.grid:has(> aside > .candidate-identity) {
+  display: block;
+}
+
+.min-h-screen.bg-canvas section > div.grid > aside:has(> .candidate-identity) {
+  display: none;
+}

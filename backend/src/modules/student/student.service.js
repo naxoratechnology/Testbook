@@ -4,6 +4,8 @@ const Attempt = require('../testSeries/testSeries.attempt.model');
 const Course = require('../course/course.model');
 const Enrollment = require('../course/course.enrollment.model');
 const TestSeries = require('../testSeries/testSeries.model');
+const Notes = require('../notes/notes.model');
+const NotesPurchase = require('../notes/notes.purchase.model');
 
 const projection = '-password';
 
@@ -29,34 +31,53 @@ const listStudents = async ({ active, exam, search }) => {
 const getStudent = async (id) => {
   const student = await User.findOne({ _id: id, role: 'student' }, projection).lean();
   if (!student) return null;
-  const [purchases, enrollments, attempts, paidCourses, paidSeries] = await Promise.all([
+  const [purchases, enrollments, notesPurchases, attempts, paidCourses, paidSeries, paidNotes] = await Promise.all([
     Purchase.find({ user: id, status: 'active' }).populate('series', 'title access status').sort({ createdAt: -1 }).lean(),
     Enrollment.find({ user: id, status: 'active' }).populate('course', 'title access status').sort({ createdAt: -1 }).lean(),
+    NotesPurchase.find({ user: id, status: 'active' }).populate('notes', 'name access status').sort({ createdAt: -1 }).lean(),
     Attempt.find({ user: id }).populate('series', 'title tests').sort({ submittedAt: -1 }).lean(),
     Course.find({ access: 'paid', status: 'published' }).select('title price').sort({ title: 1 }).lean(),
     TestSeries.find({ access: 'paid', status: 'published' }).select('title price').sort({ title: 1 }).lean(),
+    Notes.find({ access: 'paid', status: 'published' }).select('name price').sort({ name: 1 }).lean(),
   ]);
   const testAttempts = attempts.map((attempt) => { const series = attempt.series; const test = series?.tests?.find((item) => String(item._id) === String(attempt.test)); return { _id: attempt._id, seriesTitle: series?.title || 'Test Series', testTitle: test?.title || 'Test', score: attempt.score, accuracy: attempt.accuracy, correct: attempt.correct, incorrect: attempt.incorrect, unanswered: attempt.unanswered, submittedAt: attempt.submittedAt }; });
   const purchasedSeries = purchases.map((purchase) => purchase.series).filter(Boolean);
   const enrolledCourses = enrollments.map((enrollment) => enrollment.course).filter(Boolean);
-  const activeCourseIds = new Set(enrolledCourses.map((course) => String(course._id))); const activeSeriesIds = new Set(purchasedSeries.map((series) => String(series._id)));
-  return { ...student, purchasedSeries, enrolledCourses, accessOptions: { courses: paidCourses.filter((course) => !activeCourseIds.has(String(course._id))), testSeries: paidSeries.filter((series) => !activeSeriesIds.has(String(series._id))) }, testAttempts, averageAccuracy: testAttempts.length ? Math.round(testAttempts.reduce((sum, attempt) => sum + attempt.accuracy, 0) / testAttempts.length) : 0 };
+  const purchasedNotes = notesPurchases.map((purchase) => purchase.notes && ({ ...purchase.notes, title: purchase.notes.name })).filter(Boolean);
+  const activeCourseIds = new Set(enrolledCourses.map((course) => String(course._id))); const activeSeriesIds = new Set(purchasedSeries.map((series) => String(series._id))); const activeNotesIds = new Set(purchasedNotes.map((notes) => String(notes._id)));
+  return { ...student, purchasedSeries, enrolledCourses, purchasedNotes, accessOptions: { courses: paidCourses.filter((course) => !activeCourseIds.has(String(course._id))), testSeries: paidSeries.filter((series) => !activeSeriesIds.has(String(series._id))), notes: paidNotes.filter((notes) => !activeNotesIds.has(String(notes._id))).map((notes) => ({ ...notes, title: notes.name })) }, testAttempts, averageAccuracy: testAttempts.length ? Math.round(testAttempts.reduce((sum, attempt) => sum + attempt.accuracy, 0) / testAttempts.length) : 0 };
 };
 const grantAccess = async (studentId, { type, contentId }, adminId) => {
   const student = await User.findOne({ _id: studentId, role: 'student', isActive: true });
   if (!student) throw Object.assign(new Error('Active student not found.'), { statusCode: 404 });
+  if (!student.emailVerified || student.identityVerificationStatus !== 'approved') throw Object.assign(new Error('Approve the student identity verification before granting paid content access.'), { statusCode: 403 });
   if (type === 'course') {
     const course = await Course.findOne({ _id: contentId, access: 'paid', status: 'published' });
     if (!course) throw Object.assign(new Error('Paid course not found or not published.'), { statusCode: 404 });
     await Enrollment.findOneAndUpdate({ user: studentId, course: contentId }, { status: 'active', amount: 0, currency: 'INR', purchasedAt: new Date(), accessSource: 'admin', grantedBy: adminId }, { upsert: true, new: true, runValidators: true });
-  } else {
+  } else if (type === 'test-series') {
     const series = await TestSeries.findOne({ _id: contentId, access: 'paid', status: 'published' });
     if (!series) throw Object.assign(new Error('Paid test series not found or not published.'), { statusCode: 404 });
     await Purchase.findOneAndUpdate({ user: studentId, series: contentId }, { status: 'active', amount: 0, currency: 'INR', purchasedAt: new Date(), accessSource: 'admin', grantedBy: adminId }, { upsert: true, new: true, runValidators: true });
+  } else {
+    const notes = await Notes.findOne({ _id: contentId, access: 'paid', status: 'published' });
+    if (!notes) throw Object.assign(new Error('Paid notes not found or not published.'), { statusCode: 404 });
+    await NotesPurchase.findOneAndUpdate({ user: studentId, notes: contentId }, { status: 'active', amount: 0, currency: 'INR', purchasedAt: new Date(), accessSource: 'admin', grantedBy: adminId }, { upsert: true, new: true, runValidators: true });
   }
   return getStudent(studentId);
 };
 const updateStatus = (id, isActive) => User.findOneAndUpdate({ _id: id, role: 'student' }, { $set: { isActive } }, { new: true, projection }).lean();
 const deleteStudent = (id) => User.findOneAndDelete({ _id: id, role: 'student' }, { projection }).lean();
+const updateVerification = async (id, { status, note }, adminId) => {
+  const student = await User.findOne({ _id: id, role: 'student' });
+  if (!student) return null;
+  if (!student.emailVerified || !student.identityDocumentUrl) throw Object.assign(new Error('The student must verify their email and submit an identity document first.'), { statusCode: 400 });
+  student.identityVerificationStatus = status;
+  student.identityVerificationNote = String(note || '').trim();
+  student.identityVerifiedAt = status === 'approved' ? new Date() : null;
+  student.identityVerifiedBy = status === 'approved' ? adminId : null;
+  await student.save();
+  return getStudent(id);
+};
 
-module.exports = { listStudents, getStudent, updateStatus, grantAccess, deleteStudent };
+module.exports = { listStudents, getStudent, updateStatus, updateVerification, grantAccess, deleteStudent };

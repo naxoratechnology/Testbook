@@ -33,6 +33,10 @@ export const authApiService = {
   refresh: () => authApi.post('/auth/refresh'),
   logout: () => authApi.post('/auth/logout'),
   changePassword: (data: Omit<ChangePasswordPayload, 'confirmPassword'>) => authApi.patch('/auth/password', data),
+  updateProfile: (data: { name: string; email: string; mobile: string; targetExam: string }) => authApi.patch('/auth/profile', data),
   forgotPassword: (email: string) => authApi.post('/auth/forgot-password', { email }),
   resetPassword: (data: { email: string; otp: string; newPassword: string }) => authApi.post('/auth/reset-password', data),
+  verifyRegistrationOtp: (otp: string) => authApi.post('/auth/registration/verify-otp', { otp }),
+  resendRegistrationOtp: () => authApi.post('/auth/registration/resend-otp'),
+  uploadIdentityDocument: (document: File) => { const data = new FormData(); data.append('document', document); return authApi.post('/auth/identity-document', data); },
 };

@@ -1,12 +1,14 @@
 const router = require('express').Router();
 const controller = require('./notes.controller');
-const { requireAuth, requireRole } = require('../auth/auth.middleware');
+const { requireAuth, requireRole, optionalAuth } = require('../auth/auth.middleware');
 const { upload } = require('./notes.upload');
 const { thumbnailUpload } = require('../../utils/thumbnailUpload');
-router.get('/', controller.list);
+router.get('/', optionalAuth, controller.list);
 router.get('/admin', requireAuth, requireRole('admin'), controller.adminList);
 router.get('/admin/:id', requireAuth, requireRole('admin'), controller.adminDetail);
-router.get('/:id', controller.detail);
+router.get('/:id', optionalAuth, controller.detail);
+router.post('/:id/checkout', requireAuth, requireRole('student'), controller.checkout);
+router.post('/:id/checkout/verify', requireAuth, requireRole('student'), controller.verifyPayment);
 router.post('/', requireAuth, requireRole('admin'), upload.single('file'), controller.create);
 router.post('/:id/thumbnail', requireAuth, requireRole('admin'), thumbnailUpload, controller.uploadThumbnail);
 router.delete('/:id/thumbnail', requireAuth, requireRole('admin'), controller.removeThumbnail);

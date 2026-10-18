@@ -39,12 +39,12 @@ export function Solutions({ source = 'test-series' }: { source?: QuestionSource 
   if (!question) return <PageShell title="Solutions"><Link to={back} className={btn('secondary', 'md')}>Back to Tests</Link></PageShell>;
   const hasResult = source === 'test-series' && currentAttempt?.series === seriesId && currentAttempt?.test === testId;
   const reference = { source, sourceId, ...(source === 'test-series' ? { testId } : {}), questionId: question._id };
-  return <div className="fixed inset-0 z-50 h-[100dvh] w-full overflow-y-auto bg-canvas text-ink">
-    <header className="sticky top-0 z-20 flex min-h-16 flex-wrap items-center gap-3 border-b border-line bg-white px-4 py-3 sm:px-6">
+  return <div className="fixed inset-0 z-50 flex h-[100dvh] w-full flex-col overflow-hidden bg-canvas text-ink">
+    <header className="sticky top-0 z-20 flex min-h-16 shrink-0 flex-wrap items-center gap-3 border-b border-line bg-white px-4 py-3 sm:px-6">
       <Link to={back} className={btn('danger', 'sm', 'shrink-0 font-semibold')}>Back to Tests</Link>
       <h1 className="order-last w-full min-w-0 text-sm font-semibold sm:order-none sm:w-auto sm:flex-1 sm:text-base">{result.title}</h1>
     </header>
-    <main className="w-full p-4 sm:p-6"><p className="mb-4 text-sm text-ink-muted">{result.preview ? 'Read correct answers and explanations before attempting the paper.' : 'Review your answers and explanations.'}</p>
+    <main className="min-h-0 flex-1 w-full overflow-y-auto p-4 sm:p-6"><p className="mb-4 text-sm text-ink-muted">{result.preview ? 'Read correct answers and explanations before attempting the paper.' : 'Review your answers and explanations.'}</p>
     <SolutionReview key={result._id} result={result} index={index} onJump={setIndex} name={user.name} actions={<><BookmarkButton reference={reference} /><ReportQuestionButton reference={reference} /></>} navigation={<Link to={hasResult ? `/test-series/${seriesId}/tests/${testId}/result` : back} className={btn('ghost', 'sm')}>{hasResult ? 'Result' : 'Back to Tests'}</Link>} />
     </main>
   </div>;

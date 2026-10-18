@@ -32,6 +32,7 @@ export function TestAttempt({ title, questions, duration = 0, languages, saving,
   useEffect(() => { if (!photo) return; const url = URL.createObjectURL(photo); setPhotoUrl(url); return () => URL.revokeObjectURL(url); }, [photo]);
   useEffect(() => { const change = () => setFullscreen(document.fullscreenElement === screen.current); document.addEventListener('fullscreenchange', change); return () => { document.removeEventListener('fullscreenchange', change); if (document.fullscreenElement === screen.current) void document.exitFullscreen().catch(() => undefined); }; }, []);
   useEffect(() => { if (!started) return; const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ''; }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [started]);
+  useEffect(() => { if (!started) return; screen.current?.scrollTo({ top: 0, left: 0, behavior: 'auto' }); }, [started, index]);
   const requestFullscreen = () => { if (screen.current?.requestFullscreen) void screen.current.requestFullscreen().catch(() => setFullscreen(false)); };
   const submit = useCallback(async () => {
     if (submitting.current || saving) return;

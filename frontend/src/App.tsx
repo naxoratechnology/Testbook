@@ -80,15 +80,11 @@ export function App() {
               <Route path="/courses/:courseId" element={<RequireLogin><CourseDetail /></RequireLogin>} />
               <Route path="/test-series" element={<TestSeriesPage />} />
               <Route path="/test-series/:seriesId" element={<RequireLogin><TestSeriesDetail /></RequireLogin>} />
-              <Route path="/test-series/:seriesId/tests/:testId/result" element={<TestResult />} />
-              <Route path="/test-series/:seriesId/tests/:testId/solutions" element={<Solutions />} />
               <Route path="/notes" element={<Notes />} />
               <Route path="/notes/:collectionName" element={<Notes />} />
               <Route path="/current-affairs" element={<CurrentAffairs />} />
-              <Route path="/current-affairs/:entryId/solutions" element={<Solutions source="current-affairs" />} />
               <Route path="/current-affairs/:entryId/test" element={<CurrentAffairsTest />} />
               <Route path="/previous-papers" element={<PreviousPapers />} />
-              <Route path="/previous-papers/:paperId/solutions" element={<Solutions source="previous-paper" />} />
               <Route path="/previous-papers/:paperId/test" element={<PreviousPaperTest />} />
               <Route path="/syllabus" element={<SyllabusPage />} />
               <Route path="/notices" element={<NoticesPage />} />
@@ -105,6 +101,10 @@ export function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/learn/:courseId/:lessonId" element={<VideoViewer />} />
             <Route path="/test-series/:seriesId/tests/:testId" element={<TestInterface />} />
+            <Route path="/test-series/:seriesId/tests/:testId/result" element={<TestResult />} />
+            <Route path="/test-series/:seriesId/tests/:testId/solutions" element={<Solutions />} />
+            <Route path="/current-affairs/:entryId/solutions" element={<Solutions source="current-affairs" />} />
+            <Route path="/previous-papers/:paperId/solutions" element={<Solutions source="previous-paper" />} />
 
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="/admin/dashboard" replace />} />

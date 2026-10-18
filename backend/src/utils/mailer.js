@@ -34,4 +34,19 @@ async function sendPasswordResetOtp(user, otp) {
   });
 }
 
-module.exports = { sendPasswordResetOtp };
+async function sendRegistrationOtp(user, otp) {
+  const hasInlineLogo = fs.existsSync(logoPath);
+  const logoSource = hasInlineLogo ? 'cid:chandrabhaga-academy-logo' : `${env.publicWebUrl}/logo.png`;
+  const html = resetOtpTemplate(user.name, otp, logoSource)
+    .replace('Reset your password', 'Verify your email')
+    .replace('to reset your password.', 'to verify your Chandrabhaga Academy account.')
+    .replace('If you did not request this reset, you can safely ignore this email.', 'If you did not create this account, you can safely ignore this email.');
+  await client().sendMail({
+    from: `"${env.smtp.fromName.replace(/["\r\n]/g, '')}" <${env.smtp.fromEmail}>`, replyTo: env.smtp.replyTo,
+    to: user.email, subject: 'Verify your Chandrabhaga Academy account',
+    text: `Hello ${user.name}, your email verification OTP is ${otp}. It expires in 10 minutes. Do not share this code.`, html,
+    attachments: hasInlineLogo ? [{ filename: 'chandrabhaga-academy-logo.png', path: logoPath, cid: 'chandrabhaga-academy-logo' }] : [],
+  });
+}
+
+module.exports = { sendPasswordResetOtp, sendRegistrationOtp };

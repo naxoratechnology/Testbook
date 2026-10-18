@@ -9,6 +9,11 @@ import { useViewer } from '../contexts/ViewerContext';
 import { fetchPublicNotes } from '../services/notes/notes.slice';
 import type { AdminNote } from '../services/notes/notes.api';
 import type { AppDispatch, RootState } from '../store';
+import { useAuth } from '../contexts/AuthContext';
+import { notesApiService } from '../services/notes/notes.api';
+
+declare global { interface Window { Razorpay?: new (options: Record<string, unknown>) => { open: () => void }; } }
+const loadRazorpay = () => new Promise<boolean>((resolve) => { if (window.Razorpay) return resolve(true); const script = document.createElement('script'); script.src = 'https://checkout.razorpay.com/v1/checkout.js'; script.onload = () => resolve(true); script.onerror = () => resolve(false); document.body.appendChild(script); });
 
 const collectionName = (note: AdminNote) => note.subject?.trim() || 'General notes';
 
@@ -17,6 +22,7 @@ export function Notes() {
   const selectedCollection = routeCollection ? decodeURIComponent(routeCollection) : '';
   const dispatch = useDispatch<AppDispatch>();
   const { openPdf } = useViewer();
+  const { user } = useAuth();
   const { publicItems, loading, error } = useSelector((state: RootState) => state.notes);
   const [query, setQuery] = useState('');
 
@@ -43,13 +49,19 @@ export function Notes() {
 
   const notes = useMemo(() => publicItems.filter((note) => collectionName(note) === selectedCollection && (!query.trim() || `${note.name} ${note.exam} ${note.description}`.toLowerCase().includes(query.trim().toLowerCase()))), [publicItems, query, selectedCollection]);
 
-  const read = (note: AdminNote) => openPdf({
+  const read = async (note: AdminNote) => {
+    if (note.access === 'paid' && !note.hasAccess) {
+      if (!user) { window.location.href = `/login?redirect=${encodeURIComponent(`/notes/${selectedCollection}`)}`; return; }
+      try { const data = (await notesApiService.checkout(note._id)).data.data; if (data.purchased || data.free) { await dispatch(fetchPublicNotes()); return; } if (!await loadRazorpay() || !window.Razorpay) throw new Error('Unable to load payment checkout.'); new window.Razorpay({ key: data.keyId, amount: data.order.amount, currency: data.order.currency, name: 'Chandrabhaga Academy', description: note.name, order_id: data.order.id, prefill: { name: user.name, email: user.email, contact: user.mobile }, theme: { color: '#f75c01' }, handler: async (payment: Record<string, string>) => { await notesApiService.verifyCheckout(note._id, payment); await dispatch(fetchPublicNotes()); } }).open(); } catch (failure) { window.alert((failure as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Unable to purchase notes.'); } return;
+    }
+    openPdf({
     title: note.name,
     subtitle: [note.exam, collectionName(note)].filter(Boolean).join(' · '),
     module: 'notes',
     url: note.pdfUrl,
     pages: [],
-  });
+    });
+  };
 
   if (selectedCollection) {
     return <PageShell title={selectedCollection} subtitle="Choose a document to open it in the secure PDF reader.">
