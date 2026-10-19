@@ -44,7 +44,8 @@ import { AdminTestSeriesDetail } from './pages/admin/AdminTestSeriesDetail';
 import { AdminQuestionReports } from './pages/admin/AdminQuestionReports';
 import { AdminTestBuilder } from './pages/admin/AdminTestBuilder';
 import { AdminNotes } from './pages/admin/AdminNotes';
-import { AdminNotesForm } from './pages/admin/AdminNotesForm';
+import { AdminNotesCollectionForm } from './pages/admin/AdminNotesCollectionForm';
+import { AdminNotesCollectionDetail } from './pages/admin/AdminNotesCollectionDetail';
 import { AdminCurrentAffairs } from './pages/admin/AdminCurrentAffairs';
 import { AdminCurrentAffairsForm } from './pages/admin/AdminCurrentAffairsForm';
 import { AdminNotices } from './pages/admin/AdminNotices';
@@ -81,7 +82,8 @@ export function App() {
               <Route path="/test-series" element={<TestSeriesPage />} />
               <Route path="/test-series/:seriesId" element={<RequireLogin><TestSeriesDetail /></RequireLogin>} />
               <Route path="/notes" element={<Notes />} />
-              <Route path="/notes/:collectionName" element={<Notes />} />
+              <Route path="/notes/:exam" element={<Notes />} />
+              <Route path="/notes/:exam/:subject" element={<Notes />} />
               <Route path="/current-affairs" element={<CurrentAffairs />} />
               <Route path="/current-affairs/:entryId/test" element={<CurrentAffairsTest />} />
               <Route path="/previous-papers" element={<PreviousPapers />} />
@@ -120,8 +122,9 @@ export function App() {
               <Route path="test-series/:seriesId/tests/:testId/edit" element={<AdminTestBuilder />} />
               <Route path="question-reports" element={<AdminQuestionReports />} />
               <Route path="notes" element={<AdminNotes />} />
-              <Route path="notes/new" element={<AdminNotesForm />} />
-              <Route path="notes/:noteId/edit" element={<AdminNotesForm />} />
+              <Route path="notes/new" element={<AdminNotesCollectionForm />} />
+              <Route path="notes/:collectionId/edit" element={<AdminNotesCollectionForm />} />
+              <Route path="notes/:collectionId" element={<AdminNotesCollectionDetail />} />
               <Route path="current-affairs" element={<AdminCurrentAffairs />} />
               <Route path="current-affairs/new" element={<AdminCurrentAffairsForm />} />
               <Route path="current-affairs/:entryId/edit" element={<AdminCurrentAffairsForm />} />

@@ -10,9 +10,10 @@ const checkout = run(async (req, res) => res.json({ success: true, data: await p
 const verifyPayment = run(async (req, res) => res.json({ success: true, data: await payment.verify(req.auth.sub, req.params.id, req.body) }));
 const adminDetail = run(async (req, res) => res.json({ success: true, data: { notes: await service.find(req.params.id, true) } }));
 const update = run(async (req, res) => { const { value, errors } = validation.validate(req.body); if (Object.keys(errors).length) return res.status(400).json({ success: false, message: 'Validation failed.', errors }); return res.json({ success: true, data: { notes: await service.update(req.params.id, value) } }); });
+const replacePdf = run(async (req, res) => { if (!req.file) return res.status(400).json({ success: false, message: 'A PDF file is required.' }); return res.json({ success: true, data: { notes: await service.replacePdf(req.params.id, req.file) } }); });
 const remove = run(async (req, res) => { await service.remove(req.params.id); return res.json({ success: true, message: 'Notes deleted successfully.' }); });
 const { saveThumbnail, removeThumbnail } = require('../../utils/thumbnailUpload');
 const Notes = require('./notes.model');
 const uploadThumbnail = run(async (req, res) => res.json({ success: true, data: { notes: await saveThumbnail(Notes, req.params.id, req.file, 'notes') } }));
 const deleteThumbnail = run(async (req, res) => res.json({ success: true, data: { notes: await removeThumbnail(Notes, req.params.id) } }));
-module.exports = { create, list, adminList, detail, adminDetail, checkout, verifyPayment, update, remove, uploadThumbnail, removeThumbnail: deleteThumbnail };
+module.exports = { create, list, adminList, detail, adminDetail, checkout, verifyPayment, update, replacePdf, remove, uploadThumbnail, removeThumbnail: deleteThumbnail };

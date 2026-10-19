@@ -34,18 +34,19 @@ const getStudent = async (id) => {
   const [purchases, enrollments, notesPurchases, attempts, paidCourses, paidSeries, paidNotes] = await Promise.all([
     Purchase.find({ user: id, status: 'active' }).populate('series', 'title access status').sort({ createdAt: -1 }).lean(),
     Enrollment.find({ user: id, status: 'active' }).populate('course', 'title access status').sort({ createdAt: -1 }).lean(),
-    NotesPurchase.find({ user: id, status: 'active' }).populate('notes', 'name access status').sort({ createdAt: -1 }).lean(),
+    NotesPurchase.find({ user: id, status: 'active' }).populate('notes', 'name exam access status').sort({ createdAt: -1 }).lean(),
     Attempt.find({ user: id }).populate('series', 'title tests').sort({ submittedAt: -1 }).lean(),
     Course.find({ access: 'paid', status: 'published' }).select('title price').sort({ title: 1 }).lean(),
     TestSeries.find({ access: 'paid', status: 'published' }).select('title price').sort({ title: 1 }).lean(),
-    Notes.find({ access: 'paid', status: 'published' }).select('name price').sort({ name: 1 }).lean(),
+    Notes.find({ access: 'paid', status: 'published' }).select('name exam price').sort({ exam: 1, name: 1 }).lean(),
   ]);
   const testAttempts = attempts.map((attempt) => { const series = attempt.series; const test = series?.tests?.find((item) => String(item._id) === String(attempt.test)); return { _id: attempt._id, seriesTitle: series?.title || 'Test Series', testTitle: test?.title || 'Test', score: attempt.score, accuracy: attempt.accuracy, correct: attempt.correct, incorrect: attempt.incorrect, unanswered: attempt.unanswered, submittedAt: attempt.submittedAt }; });
   const purchasedSeries = purchases.map((purchase) => purchase.series).filter(Boolean);
   const enrolledCourses = enrollments.map((enrollment) => enrollment.course).filter(Boolean);
-  const purchasedNotes = notesPurchases.map((purchase) => purchase.notes && ({ ...purchase.notes, title: purchase.notes.name })).filter(Boolean);
-  const activeCourseIds = new Set(enrolledCourses.map((course) => String(course._id))); const activeSeriesIds = new Set(purchasedSeries.map((series) => String(series._id))); const activeNotesIds = new Set(purchasedNotes.map((notes) => String(notes._id)));
-  return { ...student, purchasedSeries, enrolledCourses, purchasedNotes, accessOptions: { courses: paidCourses.filter((course) => !activeCourseIds.has(String(course._id))), testSeries: paidSeries.filter((series) => !activeSeriesIds.has(String(series._id))), notes: paidNotes.filter((notes) => !activeNotesIds.has(String(notes._id))).map((notes) => ({ ...notes, title: notes.name })) }, testAttempts, averageAccuracy: testAttempts.length ? Math.round(testAttempts.reduce((sum, attempt) => sum + attempt.accuracy, 0) / testAttempts.length) : 0 };
+  const purchasedNotes = [...new Map(notesPurchases.filter((purchase) => purchase.notes).map((purchase) => [purchase.notes.exam, { ...purchase.notes, title: `${purchase.notes.exam} Notes` }])).values()];
+  const paidNoteExams = [...new Map(paidNotes.map((notes) => [notes.exam, { ...notes, title: `${notes.exam} Notes` }])).values()];
+  const activeCourseIds = new Set(enrolledCourses.map((course) => String(course._id))); const activeSeriesIds = new Set(purchasedSeries.map((series) => String(series._id))); const activeNoteExams = new Set(purchasedNotes.map((notes) => notes.exam));
+  return { ...student, purchasedSeries, enrolledCourses, purchasedNotes, accessOptions: { courses: paidCourses.filter((course) => !activeCourseIds.has(String(course._id))), testSeries: paidSeries.filter((series) => !activeSeriesIds.has(String(series._id))), notes: paidNoteExams.filter((notes) => !activeNoteExams.has(notes.exam)) }, testAttempts, averageAccuracy: testAttempts.length ? Math.round(testAttempts.reduce((sum, attempt) => sum + attempt.accuracy, 0) / testAttempts.length) : 0 };
 };
 const grantAccess = async (studentId, { type, contentId }, adminId) => {
   const student = await User.findOne({ _id: studentId, role: 'student', isActive: true });
