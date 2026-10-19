@@ -32,7 +32,7 @@ export function Login() {
     try { await loginSchema.validate({ identifier, password }, { abortEarly: false }); setErrors({}); }
     catch (failure) { setErrors(fieldErrors(failure)); return; }
     setLoading(true);
-    try { const role = await login(identifier.trim(), password); const redirect = new URLSearchParams(location.search).get('redirect'); navigate(role === 'admin' ? '/admin/dashboard' : redirect || '/dashboard'); }
+    try { const user = await login(identifier.trim(), password); const redirect = new URLSearchParams(location.search).get('redirect'); navigate(user.role === 'admin' ? '/admin/dashboard' : !user.emailVerified || !user.identityDocumentName ? '/register' : redirect || '/dashboard'); }
     catch (failure) { setError(failure instanceof Error ? failure.message : String(failure)); }
     finally { setLoading(false); }
   };

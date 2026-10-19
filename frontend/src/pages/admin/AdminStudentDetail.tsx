@@ -1,16 +1,54 @@
-import { useEffect, useState } from 'react'; import { Link, useParams } from 'react-router-dom'; import { XIcon } from 'lucide-react'; import { useDispatch, useSelector } from 'react-redux';
-import { PageShell, Panel, StatCard } from '../../components/ui/PageShell'; import { Badge, Button, Field, Select, StatusBadge, btn } from '../../components/ui/Primitives'; import { Table, TableWrap, Td, Th } from '../../components/admin/DataTable'; import { Avatar } from '../../components/layout/Navbar'; import { fetchStudent, grantStudentAccess, updateStudentStatus, updateStudentVerification } from '../../services/students/students.slice'; import type { AppDispatch, RootState } from '../../store';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { XIcon } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { PageShell, Panel, StatCard } from '../../components/ui/PageShell';
+import { Button, Field, Select, StatusBadge, btn } from '../../components/ui/Primitives';
+import { Table, TableWrap, Td, Th } from '../../components/admin/DataTable';
+import { Avatar } from '../../components/layout/Navbar';
+import { fetchStudent, grantStudentAccess, updateStudentStatus } from '../../services/students/students.slice';
+import type { AppDispatch, RootState } from '../../store';
+
 export function AdminStudentDetail() {
-  const { studentId = '' } = useParams(); const dispatch = useDispatch<AppDispatch>(); const { current: student, loading, saving, error } = useSelector((state: RootState) => state.students);
-  const [type, setType] = useState<'course' | 'test-series' | 'notes'>('course'); const [contentId, setContentId] = useState(''); const [message, setMessage] = useState(''); const [note, setNote] = useState(''); const [preview, setPreview] = useState(false);
-  useEffect(() => { if (studentId) dispatch(fetchStudent(studentId)); }, [studentId, dispatch]); useEffect(() => { setContentId(''); }, [type]);
-  if (loading) return <PageShell title="Student"><Panel>Loading student...</Panel></PageShell>; if (!student) return <PageShell title="Student unavailable"><Panel>{error}<Link className={btn('secondary','md','mt-4')} to="/admin/students">Back</Link></Panel></PageShell>;
-  const approved = student.emailVerified && student.identityVerificationStatus === 'approved'; const options = type === 'course' ? student.accessOptions.courses : type === 'test-series' ? student.accessOptions.testSeries : student.accessOptions.notes;
-  const review = async (status: 'approved'|'rejected') => { await dispatch(updateStudentVerification({ id: student._id, status, note })).unwrap(); await dispatch(fetchStudent(student._id)); setMessage(`Verification ${status}.`); };
-  const grant = async () => { if (!approved || !contentId) return; await dispatch(grantStudentAccess({ id: student._id, type, contentId })).unwrap(); setContentId(''); setMessage('Access granted successfully.'); };
-  return <PageShell title={student.name} subtitle={`Registered ${new Date(student.createdAt).toLocaleDateString('en-IN')} · ${student.targetExam || 'No target exam'}`} width="max-w-[1200px]" actions={<><Link to="/admin/students" className={btn('secondary','md')}>Back to students</Link><Button variant={student.isActive ? 'danger' : 'primary'} disabled={saving} onClick={() => dispatch(updateStudentStatus({ id: student._id, isActive: !student.isActive }))}>{student.isActive ? 'Deactivate' : 'Activate'}</Button></>}>
-    <div className="grid gap-5 lg:grid-cols-[1fr_2fr] lg:items-start"><Panel><div className="flex items-center gap-4"><Avatar name={student.name} size={56}/><div><b>{student.name}</b><StatusBadge status={student.isActive ? 'active':'inactive'}/></div></div><div className="mt-4 space-y-2 border-t border-line pt-4 text-sm"><p>{student.email}</p><p>{student.mobile}</p><p>{student.targetExam}</p></div><div className="mt-4 border-t border-line pt-4"><div className="flex justify-between"><b>Identity verification</b><Badge tone={approved ? 'green' : student.identityVerificationStatus === 'rejected' ? 'red':'amber'}>{student.identityVerificationStatus.replace('_',' ')}</Badge></div>{student.identityDocumentUrl ? <Button size="sm" className="mt-3 w-full" onClick={() => setPreview(true)}>View identity document</Button> : <p className="mt-2 text-sm text-ink-muted">No document submitted.</p>}<textarea className="mt-3 min-h-20 w-full rounded-xl border border-line p-2 text-sm" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Optional review note"/><div className="mt-2 flex gap-2"><Button size="sm" disabled={!student.emailVerified || !student.identityDocumentUrl} onClick={() => void review('approved')}>Approve</Button><Button size="sm" variant="danger" disabled={!student.identityDocumentUrl} onClick={() => void review('rejected')}>Reject</Button></div></div></Panel>
-      <div className="space-y-5"><div className="grid gap-4 sm:grid-cols-3"><StatCard label="Courses" value={String(student.enrolledCourses.length)}/><StatCard label="Test series" value={String(student.purchasedSeries.length)}/><StatCard label="Paid notes" value={String(student.purchasedNotes?.length || 0)}/></div><Panel><b>Grant paid content access</b>{!approved && <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-700">Approve identity verification before granting access.</p>}<div className="mt-4 grid gap-3 sm:grid-cols-[180px_1fr_auto] sm:items-end"><Field label="Content type"><Select disabled={!approved} value={type} onChange={(e) => setType(e.target.value as typeof type)}><option value="course">Paid course</option><option value="test-series">Paid test series</option><option value="notes">Paid notes</option></Select></Field><Field label="Content"><Select disabled={!approved} value={contentId} onChange={(e) => setContentId(e.target.value)}><option value="">Select content</option>{options.map((item) => <option key={item._id} value={item._id}>{item.title} · ₹{item.price}</option>)}</Select></Field><Button disabled={!approved || !contentId || saving} onClick={() => void grant()}>Grant access</Button></div>{message && <p className="mt-3 text-sm text-emerald-700">{message}</p>}{error && <p className="mt-3 text-sm text-red-600">{error}</p>}</Panel><Panel><b>Granted notes</b>{!student.purchasedNotes?.length && <p className="mt-2 text-sm text-ink-muted">No paid notes access.</p>}{student.purchasedNotes?.map((item) => <p key={item._id} className="mt-2 rounded-xl border border-line p-3 text-sm">{item.title}</p>)}</Panel><div><b>Test attempts</b><TableWrap><Table><thead><tr><Th>Test</Th><Th>Score</Th><Th>Accuracy</Th></tr></thead><tbody>{student.testAttempts.map((item) => <tr key={item._id}><Td>{item.testTitle}</Td><Td>{item.score}</Td><Td>{item.accuracy}%</Td></tr>)}</tbody></Table></TableWrap></div></div></div>
-    {preview && student.identityDocumentUrl && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 p-4" onMouseDown={(e) => e.target === e.currentTarget && setPreview(false)}><div className="flex h-[90vh] w-full max-w-5xl flex-col rounded-2xl bg-white"><div className="flex justify-between border-b p-3"><b>{student.identityDocumentName}</b><button onClick={() => setPreview(false)}><XIcon/></button></div><iframe className="min-h-0 flex-1" src={student.identityDocumentUrl} title="Identity document"/></div></div>}
+  const { studentId = '' } = useParams();
+  const dispatch = useDispatch<AppDispatch>();
+  const { current: student, loading, saving, error } = useSelector((state: RootState) => state.students);
+  const [type, setType] = useState<'course' | 'test-series' | 'notes'>('course');
+  const [contentId, setContentId] = useState('');
+  const [message, setMessage] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [preview, setPreview] = useState(false);
+
+  useEffect(() => { if (studentId) dispatch(fetchStudent(studentId)); }, [studentId, dispatch]);
+  useEffect(() => { setContentId(''); setMessage(''); setActionError(''); }, [type]);
+
+  if (loading) return <PageShell title="Student"><Panel>Loading student...</Panel></PageShell>;
+  if (!student) return <PageShell title="Student unavailable"><Panel>{error}<Link className={btn('secondary', 'md', 'mt-4')} to="/admin/students">Back</Link></Panel></PageShell>;
+
+  const options = type === 'course' ? student.accessOptions?.courses || [] : type === 'test-series' ? student.accessOptions?.testSeries || [] : student.accessOptions?.notes || [];
+  const grant = async () => {
+    if (!contentId) return;
+    setMessage('');
+    setActionError('');
+    try {
+      await dispatch(grantStudentAccess({ id: student._id, type, contentId })).unwrap();
+      setContentId('');
+      setMessage('Access granted successfully.');
+    } catch (failure) {
+      setActionError(typeof failure === 'string' ? failure : 'Unable to grant access.');
+    }
+  };
+
+  return <PageShell title={student.name} subtitle={`Registered ${new Date(student.createdAt).toLocaleDateString('en-IN')} · ${student.targetExam || 'No target exam'}`} width="max-w-[1200px]" actions={<><Link to="/admin/students" className={btn('secondary', 'md')}>Back to students</Link><Button variant={student.isActive ? 'danger' : 'primary'} disabled={saving} onClick={() => dispatch(updateStudentStatus({ id: student._id, isActive: !student.isActive }))}>{student.isActive ? 'Deactivate' : 'Activate'}</Button></>}>
+    <div className="grid gap-5 lg:grid-cols-[1fr_2fr] lg:items-start">
+      <Panel><div className="flex items-center gap-4"><Avatar name={student.name} size={56}/><div><b>{student.name}</b><StatusBadge status={student.isActive ? 'active' : 'inactive'}/></div></div><div className="mt-4 space-y-2 border-t border-line pt-4 text-sm"><p>{student.email}</p><p>{student.mobile}</p><p>{student.targetExam}</p></div><div className="mt-4 border-t border-line pt-4"><b>Identity document</b>{student.identityDocumentUrl ? <Button size="sm" className="mt-3 w-full" onClick={() => setPreview(true)}>View identity document</Button> : <p className="mt-2 text-sm text-ink-muted">No document submitted.</p>}</div></Panel>
+      <div className="space-y-5">
+        <div className="grid gap-4 sm:grid-cols-3"><StatCard label="Courses" value={String(student.enrolledCourses?.length || 0)}/><StatCard label="Test series" value={String(student.purchasedSeries?.length || 0)}/><StatCard label="Paid notes" value={String(student.purchasedNotes?.length || 0)}/></div>
+        <Panel><b>Grant paid content access</b><div className="mt-4 grid gap-3 sm:grid-cols-[180px_1fr_auto] sm:items-end"><Field label="Content type"><Select value={type} onChange={(event) => setType(event.target.value as typeof type)}><option value="course">Paid course</option><option value="test-series">Paid test series</option><option value="notes">Paid notes</option></Select></Field><Field label="Content"><Select value={contentId} onChange={(event) => setContentId(event.target.value)}><option value="">Select content</option>{options.map((item) => <option key={item._id} value={item._id}>{item.title} · ₹{item.price}</option>)}</Select></Field><Button disabled={!contentId || saving} onClick={() => void grant()}>Grant access</Button></div>{message && <p className="mt-3 text-sm text-emerald-700">{message}</p>}{(actionError || error) && <p className="mt-3 text-sm text-red-600">{actionError || error}</p>}</Panel>
+        <Panel><b>Granted notes</b>{!student.purchasedNotes?.length && <p className="mt-2 text-sm text-ink-muted">No paid notes access.</p>}{student.purchasedNotes?.map((item) => <p key={item._id} className="mt-2 rounded-xl border border-line p-3 text-sm">{item.title}</p>)}</Panel>
+        <div><b>Test attempts</b><TableWrap><Table><thead><tr><Th>Test</Th><Th>Score</Th><Th>Accuracy</Th></tr></thead><tbody>{(student.testAttempts || []).map((item) => <tr key={item._id}><Td>{item.testTitle}</Td><Td>{item.score}</Td><Td>{item.accuracy}%</Td></tr>)}</tbody></Table></TableWrap></div>
+      </div>
+    </div>
+    {preview && student.identityDocumentUrl && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 p-4" onMouseDown={(event) => event.target === event.currentTarget && setPreview(false)}><div className="flex h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"><div className="flex items-center justify-between border-b p-3"><b>{student.identityDocumentName || 'Identity document'}</b><button type="button" aria-label="Close document" onClick={() => setPreview(false)}><XIcon/></button></div><iframe className="min-h-0 flex-1" src={student.identityDocumentUrl} title="Identity document"/></div></div>}
   </PageShell>;
 }

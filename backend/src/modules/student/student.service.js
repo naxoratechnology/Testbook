@@ -51,7 +51,7 @@ const getStudent = async (id) => {
 const grantAccess = async (studentId, { type, contentId }, adminId) => {
   const student = await User.findOne({ _id: studentId, role: 'student', isActive: true });
   if (!student) throw Object.assign(new Error('Active student not found.'), { statusCode: 404 });
-  if (!student.emailVerified || student.identityVerificationStatus !== 'approved') throw Object.assign(new Error('Approve the student identity verification before granting paid content access.'), { statusCode: 403 });
+  if (!student.emailVerified) throw Object.assign(new Error('The student must verify their email before receiving paid content access.'), { statusCode: 403 });
   if (type === 'course') {
     const course = await Course.findOne({ _id: contentId, access: 'paid', status: 'published' });
     if (!course) throw Object.assign(new Error('Paid course not found or not published.'), { statusCode: 404 });
@@ -69,16 +69,4 @@ const grantAccess = async (studentId, { type, contentId }, adminId) => {
 };
 const updateStatus = (id, isActive) => User.findOneAndUpdate({ _id: id, role: 'student' }, { $set: { isActive } }, { new: true, projection }).lean();
 const deleteStudent = (id) => User.findOneAndDelete({ _id: id, role: 'student' }, { projection }).lean();
-const updateVerification = async (id, { status, note }, adminId) => {
-  const student = await User.findOne({ _id: id, role: 'student' });
-  if (!student) return null;
-  if (!student.emailVerified || !student.identityDocumentUrl) throw Object.assign(new Error('The student must verify their email and submit an identity document first.'), { statusCode: 400 });
-  student.identityVerificationStatus = status;
-  student.identityVerificationNote = String(note || '').trim();
-  student.identityVerifiedAt = status === 'approved' ? new Date() : null;
-  student.identityVerifiedBy = status === 'approved' ? adminId : null;
-  await student.save();
-  return getStudent(id);
-};
-
-module.exports = { listStudents, getStudent, updateStatus, updateVerification, grantAccess, deleteStudent };
+module.exports = { listStudents, getStudent, updateStatus, grantAccess, deleteStudent };

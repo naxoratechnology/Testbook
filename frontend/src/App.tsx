@@ -65,6 +65,7 @@ function RequireLogin({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   if (loading) return <div className="flex min-h-[50vh] items-center justify-center text-sm text-ink-muted">Loading...</div>;
   if (!user) return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />;
+  if (user.role === 'student' && (!user.emailVerified || !user.identityDocumentName)) return <Navigate to="/register" replace />;
   return children;
 }
 
@@ -76,7 +77,7 @@ export function App() {
           <Routes>
             <Route element={<StudentLayout />}>
               <Route path="/" element={<Home />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard" element={<RequireLogin><Dashboard /></RequireLogin>} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/courses/:courseId" element={<RequireLogin><CourseDetail /></RequireLogin>} />
               <Route path="/test-series" element={<TestSeriesPage />} />
@@ -91,9 +92,9 @@ export function App() {
               <Route path="/syllabus" element={<SyllabusPage />} />
               <Route path="/notices" element={<NoticesPage />} />
               <Route path="/notices/:noticeId" element={<NoticeDetail />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/notifications" element={<NotificationsPage />} />
-              <Route path="/saved-questions" element={<SavedQuestions />} />
+              <Route path="/profile" element={<RequireLogin><Profile /></RequireLogin>} />
+              <Route path="/notifications" element={<RequireLogin><NotificationsPage /></RequireLogin>} />
+              <Route path="/saved-questions" element={<RequireLogin><SavedQuestions /></RequireLogin>} />
               <Route path="/miscellaneous" element={<Miscellaneous />} />
               <Route path="/about" element={<About />} />
             </Route>

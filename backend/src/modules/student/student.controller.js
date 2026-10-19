@@ -50,14 +50,4 @@ const remove = async (req, res, next) => {
     res.json({ success: true, message: 'Student deleted' });
   } catch (error) { next(error); }
 };
-const verification = async (req, res, next) => {
-  try {
-    const status = String(req.body.status || ''); const note = String(req.body.note || '');
-    if (!['approved', 'rejected'].includes(status) || note.length > 500) return res.status(400).json({ success: false, message: 'Select approve or reject and keep the note under 500 characters.' });
-    const data = await service.updateVerification(req.params.id, { status, note }, req.auth.sub);
-    if (!data) return res.status(404).json({ success: false, message: 'Student not found' });
-    return res.json({ success: true, message: `Identity verification ${status}.`, data });
-  } catch (error) { return next(error); }
-};
-
-module.exports = { list, getOne, status, verification, grantAccess, remove };
+module.exports = { list, getOne, status, grantAccess, remove };

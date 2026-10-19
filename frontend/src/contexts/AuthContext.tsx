@@ -12,7 +12,7 @@ const mapUser = (user: Omit<User, 'avatar'>): User => ({ ...user, avatar: '' });
 
 interface AuthValue {
   user: User | null;
-  login: (identifier: string, password: string) => Promise<Role>;
+  login: (identifier: string, password: string) => Promise<User>;
   register: (data: AuthData) => Promise<Role>;
   logout: () => Promise<void>;
   verifyRegistrationOtp: (otp: string) => Promise<void>;
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (identifier: string, password: string) => {
-    return (await dispatch(authLogin({ identifier, password })).unwrap()).role;
+    return await dispatch(authLogin({ identifier, password })).unwrap();
   }, [request]);
 
   const register = useCallback(async (data: AuthData) => {
