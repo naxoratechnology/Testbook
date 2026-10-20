@@ -62,8 +62,13 @@ const grantAccess = async (studentId, { type, contentId }, adminId) => {
     if (!series) throw Object.assign(new Error('Paid test series not found or not published.'), { statusCode: 404 });
     await Purchase.findOneAndUpdate({ user: studentId, series: contentId }, { status: 'active', amount: 0, currency: 'INR', purchasedAt: new Date(), accessSource: 'admin', grantedBy: adminId }, { upsert: true, new: true, runValidators: true });
   } else {
-    const collection = await NotesCollection.findOne({ _id: contentId, access: 'paid', status: 'published' });
+    let collection = await NotesCollection.findById(contentId);
+    if (!collection) {
+      const selectedNote = await Notes.findById(contentId).select('collection');
+      if (selectedNote?.collection) collection = await NotesCollection.findById(selectedNote.collection);
+    }
     if (collection) {
+      if (collection.access !== 'paid' || collection.status !== 'published') throw Object.assign(new Error('Paid Notes not found or not published.'), { statusCode: 404 });
       const notes = await Notes.find({ collection: collection._id });
       if (!notes.length) throw Object.assign(new Error('Add at least one document to these Notes before granting access.'), { statusCode: 400 });
       await Notes.updateMany({ collection: collection._id }, { $set: { exam: collection.exam, access: collection.access, price: collection.price, status: collection.status } });

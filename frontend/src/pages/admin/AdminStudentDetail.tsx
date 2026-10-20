@@ -7,7 +7,10 @@ import { Button, Field, Select, StatusBadge, btn } from '../../components/ui/Pri
 import { Table, TableWrap, Td, Th } from '../../components/admin/DataTable';
 import { Avatar } from '../../components/layout/Navbar';
 import { fetchStudent, grantStudentAccess, updateStudentStatus } from '../../services/students/students.slice';
+import { notesApiService, type NotesCollection } from '../../services/notes/notes.api';
 import type { AppDispatch, RootState } from '../../store';
+
+type NotesAccessOption = Pick<NotesCollection, '_id' | 'title' | 'exam' | 'access' | 'status' | 'price'>;
 
 export function AdminStudentDetail() {
   const { studentId = '' } = useParams();
@@ -18,14 +21,30 @@ export function AdminStudentDetail() {
   const [message, setMessage] = useState('');
   const [actionError, setActionError] = useState('');
   const [preview, setPreview] = useState(false);
+  const [publishedNotes, setPublishedNotes] = useState<NotesAccessOption[]>([]);
 
   useEffect(() => { if (studentId) dispatch(fetchStudent(studentId)); }, [studentId, dispatch]);
+  useEffect(() => {
+    let active = true;
+    notesApiService.listCollections(true)
+      .then((response) => {
+        if (!active) return;
+        setPublishedNotes((response.data.data.collections || []).filter((item: NotesCollection) => item.access === 'paid' && item.status === 'published'));
+      })
+      .catch(() => { if (active) setPublishedNotes([]); });
+    return () => { active = false; };
+  }, []);
   useEffect(() => { setContentId(''); setMessage(''); setActionError(''); }, [type]);
 
   if (loading) return <PageShell title="Student"><Panel>Loading student...</Panel></PageShell>;
   if (!student) return <PageShell title="Student unavailable"><Panel>{error}<Link className={btn('secondary', 'md', 'mt-4')} to="/admin/students">Back</Link></Panel></PageShell>;
 
-  const options = type === 'course' ? student.accessOptions?.courses || [] : type === 'test-series' ? student.accessOptions?.testSeries || [] : student.accessOptions?.notes || [];
+  const ownedNoteExams = new Set((student.purchasedNotes || []).map((item) => (item as typeof item & { exam?: string }).exam).filter(Boolean));
+  const noteOptions = Array.from(new Map([
+    ...(student.accessOptions?.notes || []),
+    ...publishedNotes,
+  ].map((item) => [item._id, item])).values()).filter((item) => !ownedNoteExams.has((item as typeof item & { exam?: string }).exam));
+  const options = type === 'course' ? student.accessOptions?.courses || [] : type === 'test-series' ? student.accessOptions?.testSeries || [] : noteOptions;
   const grant = async () => {
     if (!contentId) return;
     setMessage('');
