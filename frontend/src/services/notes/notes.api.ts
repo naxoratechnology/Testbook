@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as yup from 'yup';
 
 export type NotesStatus = 'draft' | 'published' | 'unpublished';
-export interface AdminNote { thumbnail?: string; _id: string; name: string; description: string; exam: string; subject: string; collection?: string; pdfUrl: string; pages: number; status: NotesStatus; createdAt: string; access: 'free' | 'paid'; price: number; hasAccess?: boolean }
+export interface AdminNote { thumbnail?: string; _id: string; name: string; description: string; exam: string; subject: string; collection?: string; pdfUrl: string; fileType?: 'pdf' | 'docx'; pages: number; status: NotesStatus; createdAt: string; access: 'free' | 'paid'; price: number; hasAccess?: boolean }
 export interface NotePayload { name: string; description: string; exam: string; subject: string; collection?: string; status: NotesStatus; access: 'free' | 'paid'; price: number }
 export interface CreateNotePayload extends NotePayload { file: File }
 export interface NotesCollection { _id: string; title: string; description: string; exam: string; subjects: string[]; access: 'free' | 'paid'; price: number; status: NotesStatus; thumbnail?: string; noteCount?: number; createdAt: string }

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { GlobalWorkerOptions, getDocument, type PDFDocumentProxy } from 'pdfjs-dist';
+import mammoth from 'mammoth/mammoth.browser';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import {
   ChevronLeftIcon,
@@ -45,6 +46,7 @@ export function PdfViewer() {
   const [showSearch, setShowSearch] = useState(false);
   const [pdfDocument, setPdfDocument] = useState<PDFDocumentProxy | null>(null);
   const [pdfError, setPdfError] = useState('');
+  const [wordHtml, setWordHtml] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -57,8 +59,10 @@ export function PdfViewer() {
     }
   }, [pdf]);
 
+  const isWordDocument = pdf?.fileType === 'docx' || /\.docx(?:$|[?])/i.test(pdf?.url || '');
+
   useEffect(() => {
-    if (!pdf?.url) { setPdfDocument(null); return; }
+    if (!pdf?.url || isWordDocument) { setPdfDocument(null); return; }
     let active = true;
     let loadedDocument: PDFDocumentProxy | null = null;
     setPdfDocument(null);
@@ -70,7 +74,16 @@ export function PdfViewer() {
       })
       .catch(() => { if (active) setPdfError('Unable to display this PDF. Please try again.'); });
     return () => { active = false; loadedDocument?.destroy(); };
-  }, [pdf?.url]);
+  }, [pdf?.url, isWordDocument]);
+
+  useEffect(() => {
+    if (!pdf?.url || !isWordDocument) { setWordHtml(''); return; }
+    let active = true;
+    setWordHtml('');
+    setPdfError('');
+    fetch(pdf.url).then((response) => { if (!response.ok) throw new Error('Unable to open this Word document.'); return response.arrayBuffer(); }).then((arrayBuffer) => mammoth.convertToHtml({ arrayBuffer })).then((result) => { if (active) setWordHtml(result.value); }).catch(() => { if (active) setPdfError('Unable to display this Word document. Please try again.'); });
+    return () => { active = false; };
+  }, [pdf?.url, isWordDocument]);
 
   useEffect(() => {
     if (!pdf) return;
@@ -87,7 +100,7 @@ export function PdfViewer() {
 
   if (!pdf) return null;
 
-  const isUploadedPdf = Boolean(pdf.url);
+  const isUploadedPdf = Boolean(pdf.url) && !isWordDocument;
   const total = pdf.pages.length;
   const current = pdf.pages[page - 1];
   const canDownload = pdf.module === 'syllabus';
@@ -220,7 +233,9 @@ export function PdfViewer() {
         </header>
 
         {/* Document */}
-        {isUploadedPdf ?
+        {isWordDocument ?
+        <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto bg-slate-100 p-3 sm:p-6">{pdfError ? <div className="mx-auto mt-10 max-w-md rounded-xl bg-white p-5 text-center text-sm text-red-600 shadow-soft">{pdfError}</div> : wordHtml ? <article className="prose mx-auto max-w-4xl rounded-xl bg-white p-6 text-ink shadow-soft sm:p-10" style={{ fontSize: `${Math.max(12, zoom / 7)}px` }} dangerouslySetInnerHTML={{ __html: wordHtml }} /> : <div className="flex min-h-[70vh] items-center justify-center text-sm text-ink-muted">Opening Word document...</div>}</div> :
+        isUploadedPdf ?
         <div className="flex min-h-0 flex-1 bg-slate-200">
           {pdfError ? <div className="mx-auto mt-10 h-fit max-w-md rounded-xl bg-white p-5 text-center text-sm text-red-600 shadow-soft">{pdfError}</div> : pdfDocument ? <><aside className="hidden w-40 shrink-0 overflow-y-auto border-r border-line bg-slate-100 p-3 sm:block"><div className="space-y-3">{Array.from({ length: pdfDocument.numPages }, (_, index) => <PdfPage key={index + 1} document={pdfDocument} pageNumber={index + 1} thumbnail active={page === index + 1} onClick={() => { setPage(index + 1); document.getElementById(`pdf-page-${index + 1}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} />)}</div></aside><div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-6"><div className="mx-auto max-w-4xl space-y-5">{Array.from({ length: pdfDocument.numPages }, (_, index) => <div id={`pdf-page-${index + 1}`} key={index + 1} className="scroll-mt-4" onMouseEnter={() => setPage(index + 1)}><PdfPage document={pdfDocument} pageNumber={index + 1} /></div>)}</div></div></> : <div className="flex min-h-[70vh] flex-1 items-center justify-center text-sm text-ink-muted">Opening PDF...</div>}
         </div> :

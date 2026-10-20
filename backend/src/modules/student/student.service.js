@@ -6,6 +6,7 @@ const Enrollment = require('../course/course.enrollment.model');
 const TestSeries = require('../testSeries/testSeries.model');
 const Notes = require('../notes/notes.model');
 const NotesPurchase = require('../notes/notes.purchase.model');
+const NotesCollection = require('../notes/notesCollection.model');
 
 const projection = '-password';
 
@@ -38,13 +39,13 @@ const getStudent = async (id) => {
     Attempt.find({ user: id }).populate('series', 'title tests').sort({ submittedAt: -1 }).lean(),
     Course.find({ access: 'paid', status: 'published' }).select('title price').sort({ title: 1 }).lean(),
     TestSeries.find({ access: 'paid', status: 'published' }).select('title price').sort({ title: 1 }).lean(),
-    Notes.find({ access: 'paid', status: 'published' }).select('name exam price').sort({ exam: 1, name: 1 }).lean(),
+    NotesCollection.find({ access: 'paid', status: 'published' }).select('title exam price').sort({ exam: 1, title: 1 }).lean(),
   ]);
   const testAttempts = attempts.map((attempt) => { const series = attempt.series; const test = series?.tests?.find((item) => String(item._id) === String(attempt.test)); return { _id: attempt._id, seriesTitle: series?.title || 'Test Series', testTitle: test?.title || 'Test', score: attempt.score, accuracy: attempt.accuracy, correct: attempt.correct, incorrect: attempt.incorrect, unanswered: attempt.unanswered, submittedAt: attempt.submittedAt }; });
   const purchasedSeries = purchases.map((purchase) => purchase.series).filter(Boolean);
   const enrolledCourses = enrollments.map((enrollment) => enrollment.course).filter(Boolean);
   const purchasedNotes = [...new Map(notesPurchases.filter((purchase) => purchase.notes).map((purchase) => [purchase.notes.exam, { ...purchase.notes, title: `${purchase.notes.exam} Notes` }])).values()];
-  const paidNoteExams = [...new Map(paidNotes.map((notes) => [notes.exam, { ...notes, title: `${notes.exam} Notes` }])).values()];
+  const paidNoteExams = paidNotes.map((notes) => ({ ...notes, title: notes.title || `${notes.exam} Notes` }));
   const activeCourseIds = new Set(enrolledCourses.map((course) => String(course._id))); const activeSeriesIds = new Set(purchasedSeries.map((series) => String(series._id))); const activeNoteExams = new Set(purchasedNotes.map((notes) => notes.exam));
   return { ...student, purchasedSeries, enrolledCourses, purchasedNotes, accessOptions: { courses: paidCourses.filter((course) => !activeCourseIds.has(String(course._id))), testSeries: paidSeries.filter((series) => !activeSeriesIds.has(String(series._id))), notes: paidNoteExams.filter((notes) => !activeNoteExams.has(notes.exam)) }, testAttempts, averageAccuracy: testAttempts.length ? Math.round(testAttempts.reduce((sum, attempt) => sum + attempt.accuracy, 0) / testAttempts.length) : 0 };
 };
@@ -61,9 +62,12 @@ const grantAccess = async (studentId, { type, contentId }, adminId) => {
     if (!series) throw Object.assign(new Error('Paid test series not found or not published.'), { statusCode: 404 });
     await Purchase.findOneAndUpdate({ user: studentId, series: contentId }, { status: 'active', amount: 0, currency: 'INR', purchasedAt: new Date(), accessSource: 'admin', grantedBy: adminId }, { upsert: true, new: true, runValidators: true });
   } else {
-    const notes = await Notes.findOne({ _id: contentId, access: 'paid', status: 'published' });
-    if (!notes) throw Object.assign(new Error('Paid notes not found or not published.'), { statusCode: 404 });
-    await NotesPurchase.findOneAndUpdate({ user: studentId, notes: contentId }, { status: 'active', amount: 0, currency: 'INR', purchasedAt: new Date(), accessSource: 'admin', grantedBy: adminId }, { upsert: true, new: true, runValidators: true });
+    const collection = await NotesCollection.findOne({ _id: contentId, access: 'paid', status: 'published' });
+    if (!collection) throw Object.assign(new Error('Paid Notes not found or not published.'), { statusCode: 404 });
+    const notes = await Notes.find({ collection: collection._id });
+    if (!notes.length) throw Object.assign(new Error('Add at least one document to these Notes before granting access.'), { statusCode: 400 });
+    await Notes.updateMany({ collection: collection._id }, { $set: { exam: collection.exam, access: collection.access, price: collection.price, status: collection.status } });
+    await Promise.all(notes.map((note) => NotesPurchase.findOneAndUpdate({ user: studentId, notes: note._id }, { status: 'active', amount: 0, currency: 'INR', purchasedAt: new Date(), accessSource: 'admin', grantedBy: adminId }, { upsert: true, new: true, runValidators: true })));
   }
   return getStudent(studentId);
 };

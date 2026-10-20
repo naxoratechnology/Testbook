@@ -8,6 +8,7 @@ export interface PdfDoc {
   subtitle: string;
   module: PdfModule;
   url?: string;
+  fileType?: 'pdf' | 'docx';
   pages: {heading: string;body: string[];}[];
 }
 
