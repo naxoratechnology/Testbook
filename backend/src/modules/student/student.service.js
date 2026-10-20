@@ -10,6 +10,26 @@ const NotesCollection = require('../notes/notesCollection.model');
 
 const projection = '-password';
 
+// A Notes package is the purchasable item.  Older live data can contain
+// published documents whose package was left as draft, so eligibility is
+// based on a usable document as well as the package state.  This keeps the
+// administrator's grant list usable without exposing unpublished packages.
+const paidNotesOptions = async () => {
+  const [collections, legacyNotes] = await Promise.all([
+    NotesCollection.find({ access: 'paid', status: { $ne: 'unpublished' } }).select('title exam price status').sort({ exam: 1, title: 1 }).lean(),
+    Notes.find({ collection: null, access: 'paid', status: 'published' }).select('name exam price').sort({ exam: 1, name: 1 }).lean(),
+  ]);
+  const collectionIds = collections.map((collection) => collection._id);
+  const collectionIdsWithPublishedNotes = collectionIds.length
+    ? await Notes.distinct('collection', { collection: { $in: collectionIds }, access: 'paid', status: 'published' })
+    : [];
+  const eligibleCollectionIds = new Set(collectionIdsWithPublishedNotes.map(String));
+  const packages = collections
+    .filter((collection) => eligibleCollectionIds.has(String(collection._id)))
+    .map((collection) => ({ ...collection, title: collection.title || `${collection.exam} Notes` }));
+  return [...packages, ...legacyNotes.map((note) => ({ ...note, title: note.name || `${note.exam} Notes` }))];
+};
+
 const listStudents = async ({ active, exam, search }) => {
   const filter = { role: 'student' };
   if (active !== undefined) filter.isActive = active;
@@ -35,11 +55,11 @@ const getStudent = async (id) => {
   const [purchases, enrollments, notesPurchases, attempts, paidCourses, paidSeries, paidNotes] = await Promise.all([
     Purchase.find({ user: id, status: 'active' }).populate('series', 'title access status').sort({ createdAt: -1 }).lean(),
     Enrollment.find({ user: id, status: 'active' }).populate('course', 'title access status').sort({ createdAt: -1 }).lean(),
-    NotesPurchase.find({ user: id, status: 'active' }).populate('notes', 'name exam access status').sort({ createdAt: -1 }).lean(),
+    NotesPurchase.find({ user: id, status: 'active' }).populate('notes', 'name exam access status collection').sort({ createdAt: -1 }).lean(),
     Attempt.find({ user: id }).populate('series', 'title tests').sort({ submittedAt: -1 }).lean(),
     Course.find({ access: 'paid', status: 'published' }).select('title price').sort({ title: 1 }).lean(),
     TestSeries.find({ access: 'paid', status: 'published' }).select('title price').sort({ title: 1 }).lean(),
-    NotesCollection.find({ access: 'paid', status: 'published' }).select('title exam price').sort({ exam: 1, title: 1 }).lean(),
+    paidNotesOptions(),
   ]);
   const testAttempts = attempts.map((attempt) => { const series = attempt.series; const test = series?.tests?.find((item) => String(item._id) === String(attempt.test)); return { _id: attempt._id, seriesTitle: series?.title || 'Test Series', testTitle: test?.title || 'Test', score: attempt.score, accuracy: attempt.accuracy, correct: attempt.correct, incorrect: attempt.incorrect, unanswered: attempt.unanswered, submittedAt: attempt.submittedAt }; });
   const purchasedSeries = purchases.map((purchase) => purchase.series).filter(Boolean);
@@ -62,12 +82,21 @@ const grantAccess = async (studentId, { type, contentId }, adminId) => {
     if (!series) throw Object.assign(new Error('Paid test series not found or not published.'), { statusCode: 404 });
     await Purchase.findOneAndUpdate({ user: studentId, series: contentId }, { status: 'active', amount: 0, currency: 'INR', purchasedAt: new Date(), accessSource: 'admin', grantedBy: adminId }, { upsert: true, new: true, runValidators: true });
   } else {
-    const collection = await NotesCollection.findOne({ _id: contentId, access: 'paid', status: 'published' });
-    if (!collection) throw Object.assign(new Error('Paid Notes not found or not published.'), { statusCode: 404 });
-    const notes = await Notes.find({ collection: collection._id });
-    if (!notes.length) throw Object.assign(new Error('Add at least one document to these Notes before granting access.'), { statusCode: 400 });
-    await Notes.updateMany({ collection: collection._id }, { $set: { exam: collection.exam, access: collection.access, price: collection.price, status: collection.status } });
-    await Promise.all(notes.map((note) => NotesPurchase.findOneAndUpdate({ user: studentId, notes: note._id }, { status: 'active', amount: 0, currency: 'INR', purchasedAt: new Date(), accessSource: 'admin', grantedBy: adminId }, { upsert: true, new: true, runValidators: true })));
+    const collection = await NotesCollection.findOne({ _id: contentId, access: 'paid', status: { $ne: 'unpublished' } });
+    if (collection) {
+      const notes = await Notes.find({ collection: collection._id });
+      const hasPublishedPaidNote = notes.some((note) => note.access === 'paid' && note.status === 'published');
+      if (!hasPublishedPaidNote) throw Object.assign(new Error('Publish at least one paid document in these Notes before granting access.'), { statusCode: 400 });
+      // Keep package metadata in sync, but never turn already-published legacy
+      // documents back into drafts when a parent package has stale status.
+      await Notes.updateMany({ collection: collection._id }, { $set: { exam: collection.exam, access: collection.access, price: collection.price } });
+      await Promise.all(notes.map((note) => NotesPurchase.findOneAndUpdate({ user: studentId, notes: note._id }, { status: 'active', amount: 0, currency: 'INR', purchasedAt: new Date(), accessSource: 'admin', grantedBy: adminId }, { upsert: true, new: true, runValidators: true })));
+    } else {
+      // Support Notes created before subject/package collections were added.
+      const note = await Notes.findOne({ _id: contentId, collection: null, access: 'paid', status: 'published' });
+      if (!note) throw Object.assign(new Error('Paid Notes not found or not available for access.'), { statusCode: 404 });
+      await NotesPurchase.findOneAndUpdate({ user: studentId, notes: note._id }, { status: 'active', amount: 0, currency: 'INR', purchasedAt: new Date(), accessSource: 'admin', grantedBy: adminId }, { upsert: true, new: true, runValidators: true });
+    }
   }
   return getStudent(studentId);
 };
