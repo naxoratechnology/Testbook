@@ -7,7 +7,15 @@ const logoPath = path.resolve(__dirname, '../../../frontend/public/logo.png');
 let transporter;
 function deliveryError(error) {
   if (error?.responseCode === 535 || /bad credentials|username and password not accepted/i.test(error?.message || '')) {
-    console.error('SMTP authentication failed. Check SMTP_USER and its Google App Password.');
+    const [local = '', domain = ''] = String(env.smtp.user || '').split('@');
+    console.error('SMTP authentication failed.', {
+      host: env.smtp.host,
+      port: env.smtp.port,
+      secure: env.smtp.secure,
+      user: local ? `${local.slice(0, 2)}***@${domain}` : '(missing)',
+      appPasswordLength: env.smtp.password.length,
+      responseCode: error.responseCode,
+    });
     return Object.assign(new Error('Email verification is temporarily unavailable. Please try again shortly.'), { statusCode: 503 });
   }
   return error;
