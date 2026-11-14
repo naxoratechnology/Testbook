@@ -5,13 +5,20 @@ const env = require('../config/env');
 const logoPath = path.resolve(__dirname, '../../../frontend/public/logo.png');
 
 let transporter;
+function deliveryError(error) {
+  if (error?.responseCode === 535 || /bad credentials|username and password not accepted/i.test(error?.message || '')) {
+    console.error('SMTP authentication failed. Check SMTP_USER and its Google App Password.');
+    return Object.assign(new Error('Email verification is temporarily unavailable. Please try again shortly.'), { statusCode: 503 });
+  }
+  return error;
+}
 function client() {
-  if (!env.smtp.email || !env.smtp.password) throw Object.assign(new Error('Password reset email is not configured.'), { statusCode: 503 });
+  if (!env.smtp.user || !env.smtp.password) throw Object.assign(new Error('Email delivery is not configured.'), { statusCode: 503 });
   if (!transporter) transporter = nodemailer.createTransport({
     host: env.smtp.host,
     port: env.smtp.port,
     secure: env.smtp.secure,
-    auth: { user: env.smtp.email, pass: env.smtp.password },
+    auth: { user: env.smtp.user, pass: env.smtp.password },
   });
   return transporter;
 }
@@ -23,7 +30,7 @@ function resetOtpTemplate(name, otp, logoSource) {
 
 async function sendPasswordResetOtp(user, otp) {
   const hasInlineLogo = fs.existsSync(logoPath);
-  await client().sendMail({
+  try { await client().sendMail({
     from: `"${env.smtp.fromName.replace(/["\r\n]/g, '')}" <${env.smtp.fromEmail}>`,
     replyTo: env.smtp.replyTo,
     to: user.email,
@@ -31,7 +38,7 @@ async function sendPasswordResetOtp(user, otp) {
     text: `Hello ${user.name}, your password reset OTP is ${otp}. It expires in 10 minutes. Do not share this code.`,
     html: resetOtpTemplate(user.name, otp, hasInlineLogo ? 'cid:chandrabhaga-academy-logo' : `${env.publicWebUrl}/logo.png`),
     attachments: hasInlineLogo ? [{ filename: 'chandrabhaga-academy-logo.png', path: logoPath, cid: 'chandrabhaga-academy-logo' }] : [],
-  });
+  }); } catch (error) { throw deliveryError(error); }
 }
 
 async function sendRegistrationOtp(user, otp) {
@@ -41,12 +48,12 @@ async function sendRegistrationOtp(user, otp) {
     .replace('Reset your password', 'Verify your email')
     .replace('to reset your password.', 'to verify your Chandrabhaga Academy account.')
     .replace('If you did not request this reset, you can safely ignore this email.', 'If you did not create this account, you can safely ignore this email.');
-  await client().sendMail({
+  try { await client().sendMail({
     from: `"${env.smtp.fromName.replace(/["\r\n]/g, '')}" <${env.smtp.fromEmail}>`, replyTo: env.smtp.replyTo,
     to: user.email, subject: 'Verify your Chandrabhaga Academy account',
     text: `Hello ${user.name}, your email verification OTP is ${otp}. It expires in 10 minutes. Do not share this code.`, html,
     attachments: hasInlineLogo ? [{ filename: 'chandrabhaga-academy-logo.png', path: logoPath, cid: 'chandrabhaga-academy-logo' }] : [],
-  });
+  }); } catch (error) { throw deliveryError(error); }
 }
 
 module.exports = { sendPasswordResetOtp, sendRegistrationOtp };
