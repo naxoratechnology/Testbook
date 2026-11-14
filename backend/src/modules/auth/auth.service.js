@@ -11,8 +11,24 @@ const issue = (user) => {
   return { accessToken: jwt.sign(payload, env.jwt.accessSecret, { expiresIn: env.jwt.accessExpires }), refreshToken: jwt.sign(payload, env.jwt.refreshSecret, { expiresIn: env.jwt.refreshExpires }) };
 };
 async function register(data) {
-  if (await User.exists({ $or: [{ email: data.email }, { mobile: data.mobile }] })) throw Object.assign(new Error('An account with this email or mobile already exists.'), { statusCode: 409 });
   const otp = String(crypto.randomInt(100000, 1000000));
+  const existing = await User.findOne({ $or: [{ email: data.email }, { mobile: data.mobile }] }).select('+password +registrationOtpHash +registrationOtpExpiresAt +registrationOtpAttempts +registrationOtpSentAt');
+  if (existing) {
+    if (existing.role !== 'student' || existing.emailVerified) throw Object.assign(new Error('An account with this email or mobile already exists.'), { statusCode: 409 });
+    existing.name = data.name;
+    existing.email = data.email;
+    existing.mobile = data.mobile;
+    existing.targetExam = data.targetExam;
+    existing.password = await bcrypt.hash(data.password, 12);
+    existing.registrationOtpHash = otpHash(data.email, otp);
+    existing.registrationOtpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    existing.registrationOtpAttempts = 0;
+    existing.registrationOtpSentAt = new Date();
+    await existing.save();
+    try { await sendRegistrationOtp(existing, otp); }
+    catch (error) { throw error; }
+    return { user: output(existing), ...issue(existing) };
+  }
   const user = await User.create({ ...data, password: await bcrypt.hash(data.password, 12), role: 'student', registrationOtpHash: otpHash(data.email, otp), registrationOtpExpiresAt: new Date(Date.now() + 10 * 60 * 1000), registrationOtpSentAt: new Date() });
   try { await sendRegistrationOtp(user, otp); }
   catch (error) { await User.deleteOne({ _id: user._id }); throw error; }
