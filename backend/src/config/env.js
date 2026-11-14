@@ -16,6 +16,9 @@ for (const key of requiredEnv) {
   }
 }
 
+const smtpHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+const smtpPassword = String(process.env.SMTP_PASSWORD || '').trim();
+
 const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
 
@@ -51,11 +54,13 @@ const env = {
   },
 
   smtp: {
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    host: smtpHost,
     port: Number(process.env.SMTP_PORT) || 587,
     secure: process.env.SMTP_SECURE === 'true',
     email: process.env.SMTP_EMAIL || '',
-    password: process.env.SMTP_PASSWORD || '',
+    // Google displays app passwords in four groups. Spaces are only visual
+    // separators and cause Gmail to reject SMTP authentication if sent.
+    password: /(^|\.)gmail\.com$/i.test(smtpHost) ? smtpPassword.replace(/\s+/g, '') : smtpPassword,
     fromName: process.env.SMTP_FROM_NAME || 'Chandrabhaga Academy',
     fromEmail: process.env.SMTP_FROM_EMAIL || process.env.SMTP_EMAIL || '',
     replyTo: process.env.SMTP_REPLY_TO || process.env.SMTP_FROM_EMAIL || process.env.SMTP_EMAIL || '',
