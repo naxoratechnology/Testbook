@@ -16,12 +16,16 @@ for (const key of requiredEnv) {
   }
 }
 
-const smtpHost = String(process.env.SMTP_HOST || 'smtp.gmail.com').trim();
-const smtpPassword = String(process.env.SMTP_PASSWORD || '').trim();
-const smtpEmail = String(process.env.SMTP_EMAIL || '').trim();
-const smtpUser = String(process.env.SMTP_USER || smtpEmail).trim();
-const smtpFromEmail = String(process.env.SMTP_FROM_EMAIL || smtpEmail).trim();
-const smtpReplyTo = String(process.env.SMTP_REPLY_TO || smtpFromEmail || smtpEmail).trim();
+const cleanEnvValue = (value) => {
+  const text = String(value || '').trim();
+  return /^(['"]).*\1$/.test(text) ? text.slice(1, -1).trim() : text;
+};
+const smtpHost = cleanEnvValue(process.env.SMTP_HOST || 'smtp.gmail.com');
+const smtpPassword = cleanEnvValue(process.env.SMTP_PASSWORD);
+const smtpEmail = cleanEnvValue(process.env.SMTP_EMAIL);
+const smtpUser = cleanEnvValue(process.env.SMTP_USER || smtpEmail);
+const smtpFromEmail = cleanEnvValue(process.env.SMTP_FROM_EMAIL || smtpEmail);
+const smtpReplyTo = cleanEnvValue(process.env.SMTP_REPLY_TO || smtpFromEmail || smtpEmail);
 
 const env = {
   nodeEnv: process.env.NODE_ENV || 'development',
