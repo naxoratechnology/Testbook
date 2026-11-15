@@ -23,7 +23,9 @@ const cleanEnvValue = (value) => {
 const smtpHost = cleanEnvValue(process.env.SMTP_HOST || 'smtp.gmail.com');
 const smtpPassword = cleanEnvValue(process.env.SMTP_PASSWORD);
 const smtpEmail = cleanEnvValue(process.env.SMTP_EMAIL);
-const smtpUser = cleanEnvValue(process.env.SMTP_USER || smtpEmail);
+// SMTP_EMAIL remains the primary login setting. SMTP_USER is only a fallback
+// for deployments that intentionally omit SMTP_EMAIL.
+const smtpUser = smtpEmail || cleanEnvValue(process.env.SMTP_USER);
 const smtpFromEmail = cleanEnvValue(process.env.SMTP_FROM_EMAIL || smtpEmail);
 const smtpReplyTo = cleanEnvValue(process.env.SMTP_REPLY_TO || smtpFromEmail || smtpEmail);
 
